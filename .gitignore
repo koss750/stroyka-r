@@ -120,3 +120,10 @@ public/htaccess
 public/watermark.png
 storage/templates/*
 storage/templates/
+app/Console/Commands/ExchangeRateControllerCommand.php
+app/Console/Commands/StoreDailyAverageRates.php
+app/Console/Commands/UpdateDesignDetails.php
+app/Http/Controllers/Order.php
+app/Nova/ExcelCosts.php
+resources/js/components/account-statement_2024-07-18_2024-10-17_en-gb_c71d4b.pdf
+storage copy/
