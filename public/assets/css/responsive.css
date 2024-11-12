@@ -1,0 +1,168 @@
+@media only screen and (max-width: 480px) {
+header {
+    display: none;
+}
+header.mobile-menu {
+    display: block;
+}
+img.navbar-brand, a.navbar-brand {
+    padding: 0px;
+}
+header.mobile-menu ul li a {
+    font-size: 20px;
+    text-decoration: none;
+    color: #000;
+    line-height: 35px;
+}
+.navbar-nav {
+    text-align: center;
+}
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 .0rem;
+}
+a.mobile-logo img {
+    width: 130px;
+}
+#warranty-choices, #parts-grading, #shipping-policies, #recyling-benefits, #about-us, #scrap, #auto-parts, #recyclers-matching, #matching-vehicles {
+    padding: 30px 0px 60px;
+}
+section#findSection img {
+    width: 100%;
+}
+ul.btnList li {
+    margin: 0px 8px 0px 0px;
+}
+ul.btnList li a {
+    font-size: 13px;
+    padding: 13px 10px;
+}
+ul.btnList {
+    margin-top: 0px !important;
+}
+section#bannerSection {
+    padding: 85px 0px 85px;
+}
+.afterBanner-innerText {
+    padding: 60px 0px;
+}
+.afterBanner-innerText li a {
+    font-size: 12px;
+}
+.afterBanner-innerText h3 {
+    margin-bottom: 25px;
+}
+footer {
+    padding: 0px 0px 0px;
+}
+footer h4 {
+    margin: 40px 0px 20px;
+}
+h4 {
+    font-size: 30px;
+}
+.owl-carousel.owl-loaded {
+    width: auto !important;
+}
+.item {
+    width: auto !important;
+}
+#auto-parts ul {
+    width: auto !important;
+}
+.multiBtns {
+    display: inline-block;
+}
+.multiBtns a {
+    padding: 15px 15px;
+    font-size: 20px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+form.auto-shop-form {
+    max-width: 100%;
+    margin: 30px auto 0;
+}
+form.auto-shop-form label {
+    font-size: 20px;
+    margin-right: 0px;
+    width: 110px;
+}
+.partner-details ul li p, .partner-details ul li h6 {
+    font-size: 16px;
+}
+.partner-details h4 {
+    font-size: 30px;
+}
+h4.spc-btm {
+    margin-bottom: 25px !important;
+}
+table.tableBody {
+    width: 400px;
+    overflow: scroll;
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.partner-details {
+    width: auto;
+}
+.map {
+    width: auto;
+}
+.vehicle-form label {
+    width: 20px !important;
+}
+#matching-vehicles ul li span {
+    padding: 10px;
+}
+#matching-vehicles ul li {
+    padding: 14px 10px;
+    font-size: 15px;
+}
+section#about-us .container-fluid .col-sm-6:nth-child(2) {
+    padding: 50px 15px;
+}
+div#bg-color {
+    padding: 50px 15px;
+}
+.modal tbody td {
+    padding: 8px 0px;
+    font-size: 12px;
+}
+.modal-body.p-4 {
+    padding: 20px 20px !important
+}
+img.footer-logo-main {
+    width: 100%;
+}
+label.col-sm-3.p-0.text-black.mt-auto.mb-auto.fs20px {
+    width: 83px;
+}
+.modalContent-responsive  .checkbox-pro {
+    padding-left: 22px !important;
+    font-size: 14px !important;
+}
+.modalContent-responsive  .fs18px {
+    font-size: 15px;
+}
+.vehicle-modal .modal-body .form-field-txt {
+    font-size: 15px !important;
+    width: 50%;
+}
+.modalContent-responsive .input-group .custom-file .imgInp {
+    font-size: 13px;
+    width: 100% !important;
+}
+.vehicle-modal .modal-body .table-part tr select {
+    font-size: 13px;
+    width: 100%;
+    padding: 4px 0px;
+}
+.four-col li {
+    width: 35%;
+    margin-left: 10px;
+}
+.input-group .custom-file .imgInp {
+    width: 100%;
+}
+}

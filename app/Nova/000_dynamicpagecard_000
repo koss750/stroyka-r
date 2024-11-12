@@ -1,0 +1,112 @@
+<?php
+
+namespace App\Nova;
+
+use Illuminate\Http\Request;
+use Laravel\Nova\Fields\ID;
+use Laravel\Nova\Fields\Text;
+use Laravel\Nova\Fields\Textarea;
+use Laravel\Nova\Fields\Select;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use App\Http\Controllers\RuTranslationController as Translator;
+use Ebess\AdvancedNovaMediaLibrary\Fields\Images;
+
+class DynamicPageCard extends Resource
+{
+    /**
+     * The model the resource corresponds to.
+     *
+     * @var class-string<\App\Models\DynamicPageCard>
+     */
+    public static $model = \App\Models\DynamicPageCard::class;
+
+    /**
+     * The single value that should be used to represent the resource when being displayed.
+     *
+     * @var string
+     */
+    public static $title = 'Title';
+
+    public static function label()
+    {
+        $labelCaption = 'Dynamic_Page_Card_label';
+        return Translator::translate($labelCaption); 
+    }
+
+    /**
+     * The columns that should be searched.
+     *
+     * @var array
+     */
+    public static $search = [
+        'id',
+    ];
+
+    /**
+     * Get the fields displayed by the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function fields(NovaRequest $request)
+    {
+        return [
+            ID::make()->sortable(),
+            Select::make(Translator::translate('Type_label'), 'type')->options([
+                'home' => Translator::translate('Home_label'),
+                'foundation' => Translator::translate('Foundation_label'),
+            ])->rules('required'),
+            Text::make(Translator::translate('Title_label'), 'title')->sortable()->rules('required', 'max:255'),
+            Text::make(Translator::translate('Link_label'), 'link')->rules('required', 'url'),
+            Images::make(Translator::translate('Image_label'), 'images') // second parameter is the media collection name
+                ->conversionOnIndexView('thumb')
+                ->rules('required'), // validation rules
+            Text::make(Translator::translate('Dimensions_label'), 'dimensions')->rules('required', 'max:255'),
+            Textarea::make(Translator::translate('Description_label'), 'description')->rules('required'),
+        ];
+    }
+
+    /**
+     * Get the cards available for the request.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function cards(NovaRequest $request)
+    {
+        return [];
+    }
+
+    /**
+     * Get the filters available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function filters(NovaRequest $request)
+    {
+        return [];
+    }
+
+    /**
+     * Get the lenses available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function lenses(NovaRequest $request)
+    {
+        return [];
+    }
+
+    /**
+     * Get the actions available for the resource.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest  $request
+     * @return array
+     */
+    public function actions(NovaRequest $request)
+    {
+        return [];
+    }
+}

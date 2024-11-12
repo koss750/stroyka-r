@@ -1,0 +1,147 @@
+{
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": [
+        "laravel",
+        "framework"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.0",
+        "ardenthq/nova-image-gallery-field": "dev-nova-compatibility",
+        "ayvazyan10/nova-imagic": "^1.3",
+        "borodin-services/design-files": "@dev",
+        "coreui/coreui": "5.1.0",
+        "ebess/advanced-nova-media-library": "^4.1",
+        "eminiarts/nova-tabs": "^2.2",
+        "guzzlehttp/guzzle": "^7.7",
+        "handleglobal/nova-nested-form": "dev-master",
+        "interaction-design-foundation/nova-html-card": "^3.1",
+        "intervention/image": "^2.7",
+        "joshmoreno/nova-html-field": "^0.1.0",
+        "laravel/framework": "^10.0",
+        "laravel/nova": "~4.0",
+        "laravel/sanctum": "^3.2",
+        "laravel/tinker": "^2.8",
+        "laravel/ui": "^4.5",
+        "maatwebsite/excel": "~3.1",
+        "maatwebsite/laravel-nova-excel": "~1.3",
+        "musonza/chat": "^6.3",
+        "outl1ne/nova-simple-repeatable": "^2.1",
+        "outl1ne/nova-table-field": "^2.1",
+        "phpoffice/phpspreadsheet": "^1.18",
+        "predis/predis": "^2.2",
+        "rap2hpoutre/fast-excel": "^5.2",
+        "setasign/fpdf": "*",
+        "signifly/nova-progressbar-field": "^0.0.2",
+        "stroyka/exporttool": "@dev",
+        "symfony/browser-kit": "^6.3",
+        "twbs/bootstrap": "5.3.0",
+        "vyuldashev/nova-permission": "^3.2",
+        "yassi/nova-nested-form": "^3.0",
+        "borodin-services/project-type-matrix": "@dev",
+        "borodin-services/DesignPurchaseStats": "@dev",
+        "borodin-services/designpurchasestats": "@dev"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.9.1",
+        "laravel/pint": "^1.0",
+        "laravel/sail": "^1.18",
+        "mockery/mockery": "^1.4.4",
+        "nunomaduro/collision": "^7.0",
+        "phpunit/phpunit": "^10.1"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "App\\Helpers\\": "app/Helpers/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "repositories": {
+        "nova": {
+            "type": "composer",
+            "url": "https://nova.laravel.com"
+        },
+        "0": {
+            "type": "path",
+            "url": "./nova-components/CustomTab"
+        },
+        "1": {
+            "type": "path",
+            "url": "./nova-components/CustomTab"
+        },
+        "2": {
+            "type": "path",
+            "url": "./nova-components/DesignForm"
+        },
+        "3": {
+            "type": "path",
+            "url": "./nova-components/DesignForm"
+        },
+        "4": {
+            "type": "path",
+            "url": "./nova-components/ExportTool"
+        },
+        "5": {
+            "type": "path",
+            "url": "./nova-components/ExportTool"
+        },
+        "6": {
+            "type": "path",
+            "url": "./nova-components/DesignFiles"
+        },
+        "7": {
+            "type": "path",
+            "url": "./nova-components/RedisKeys"
+        },
+        "8": {
+            "type": "path",
+            "url": "./nova-components/DesignPurchaseStats"
+        },
+        "9": {
+            "type": "path",
+            "url": "./nova-components/DesignPurchaseStats"
+        },
+        "10": {
+            "type": "path",
+            "url": "./nova-components/Designpurchasestats"
+        }
+    }
+}

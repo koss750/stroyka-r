@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="19px" height="10px" viewBox="0 0 19 10" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 41.2 (35397) - http://www.bohemiancoding.com/sketch -->
+    <title>Key</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="icon-key" fill="#FFFFFF">
+            <g id="Symbols">
+                <path d="M5.9375,3.75 L17.7045455,3.75 L19,6.25 L17.4166667,6.25 L16.625,7.5 L17.21875,7.5 L15.4375,7.5 L14.25,6.25 L19,6.25 L18.525,6.75 L18.2083333,6.25 L13.65625,6.25 L13.0625,7.5 L11.875,7.5 L11.28125,6.25 L5.9375,6.25 L5.9375,10 L1.17305893,8.85366832 C0.526913516,8.69820476 0,8.03616095 0,7.37587488 L0,2.62412512 C0,1.96544664 0.525196374,1.30220839 1.17305893,1.14633168 L5.9375,0 L5.9375,3.75 Z" id="Key"></path>
+            </g>
+        </g>
+    </g>
+</svg>

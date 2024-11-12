@@ -1,0 +1,452 @@
+.card {
+    border: none;
+    overflow: hidden;
+  }
+  
+  .card-image img {
+    width: 100%;
+    display: block; /* remove any default margin/padding */
+  }
+  
+  .card-body {
+    padding: 15px; /* adjust as necessary */
+    background: #FFFFFF; /* or any color that matches your design */
+  }
+  
+  .main-title {
+    font-size: 1.5em; /* adjust as necessary */
+    font-weight: bold;
+    margin-bottom: 0.5em; /* adjust as necessary */
+  }
+  
+  .model-name {
+    font-size: 1.2em; /* adjust as necessary */
+    font-weight: bold;
+    margin-bottom: 1em; /* adjust as necessary */
+  }
+  
+  .dimensions-area-container {
+    font-size: 1em; /* adjust as necessary */
+    margin-bottom: 2em; /* space before the price */
+  }
+  
+  .price {
+    font-size: 2em; /* adjust as necessary */
+    font-weight: bold;
+    position: absolute;
+    bottom: 15px; /* adjust as necessary */
+    right: 15px; /* adjust as necessary */
+  }
+  
+  /* Utility class for the square meter notation */
+  .sup-text {
+    vertical-align: super;
+    font-size: smaller;
+  }
+
+.logo-12 {
+    width: 100%;
+}
+
+
+
+.card-info {
+    background-color: rgba(255,255,255,0.5);
+    border-radius: 14px;
+    margin-left: 0px;
+}
+
+.sbst-listing-box {
+    background: #ffffff;
+    border-bottom: 1px solid #d6d6d6;
+    margin-bottom: 20px;
+    position: relative;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 15px;
+    padding-right: 15px;
+    padding-top: 10px;
+}
+
+.sbst-listing-box a:hover {
+    text-decoration: none
+}
+
+.sbst-listing-box .plan-badges {
+    position: absolute;
+    top: 7px;
+    right: 0;
+    z-index: 200;
+    width: 100%
+}
+
+.sbst-listing-box .plan-badges .plan-photo-icon,.sbst-listing-box .plan-badges .plan-video-icon {
+    width: 35px;
+    height: 35px;
+    float: right;
+    margin-right: 5px
+}
+
+.sbst-listing-box .plan-badges .plan-multi-select-off,.sbst-listing-box .plan-badges .plan-multi-select-on {
+    width: 45px;
+    height: 45px;
+    float: left;
+    margin-left: 5px
+}
+
+.sbst-listing-box .plan-badges .plan-photo-icon {
+    background-size: cover;
+    background: url(https://www.architecturaldesigns.com/assets/v2.0/plan_card/badge_client_photos_small-52c00ba0f2d9ae3622ad8ed6a82085abf8437135ae320f567250af8aef3e216d.svg) no-repeat;
+    background-size: 30px !important
+}
+
+.sbst-listing-box .plan-badges .plan-video-icon {
+    background-size: cover;
+    background: url(https://www.architecturaldesigns.com/assets/v2.0/plan_card/badge_client_videos_small-d9921f51d43cb376322cd26ab72f8b6126a2b14559fab331ab408527a9cbe646.svg) no-repeat;
+    background-size: 30px !important
+}
+
+.sbst-listing-box .plan-badges .plan-multi-select-off {
+    background-size: cover;
+    background: url(https://www.architecturaldesigns.com/assets/new_icons/Plan_Resting-1_2x-c99197758ee94570c33e5ff3ad757a0b36d80acff809fc6e129cb90d9cb37603.png) no-repeat;
+    background-size: 45px !important
+}
+
+.sbst-listing-box .plan-badges .plan-multi-select-on {
+    background-size: cover;
+    background: url(https://www.architecturaldesigns.com/assets/new_icons/Plan_Selected-1_2x-638b8da0ce60738f3de16cadab125f4e8898efbaed388f77886a88c23084f2b3.png) no-repeat;
+    background-size: 45px !important
+}
+
+.sbst-listing-box .image-box {
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+    height: 226px
+}
+
+.sbst-listing-box .image-box .plan-caption {
+    bottom: 0;
+    color: #fff;
+    left: 0;
+    padding: 15px 0px;
+    position: absolute;
+    text-align: left;
+    width: 100%;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(25,60,90,0) 0%, #193c5a 120%)
+}
+
+.sbst-listing-box .image-box .plan-caption span {
+    float: left;
+    margin: 0 10px 0 4px
+}
+
+.sbst-listing-box .image-box .plan-caption div {
+    font-size: 16px;
+    line-height: 15px;
+    overflow: hidden;
+    font-family: "Roboto Condensed"
+}
+
+.sbst-listing-box .image-box .exclusive-logo {
+    --d: 1px;
+    --w: 105px;
+    --c: #EE5A2A;
+    position: absolute;
+    top: 0;
+    color: #fff;
+    text-align: center;
+    width: var(--w);
+    transform-origin: bottom left;
+    background: linear-gradient(rgba(0,0,0,0.6) 0 0) bottom/100% var(--d) no-repeat var(--c);
+    clip-path: polygon(0 100%, 0 calc(100% - var(--d)), 50% calc(100% - var(--d) - var(--w)/2), 100% calc(100% - var(--d)), 100% 100%, calc(100% - var(--d)) calc(100% - var(--d)), var(--d) calc(100% - var(--d)))
+}
+
+.sbst-listing-box .image-box .exclusive-logo.pos-left {
+    left: 10px;
+    right: auto;
+    transform: translate(-34.29%, -100%) rotate(-40deg);
+    transform-origin: bottom right;
+    font-size: 11px
+}
+
+.sbst-listing-box .floor_plan_img_box {
+    background-size: contain
+}
+
+.sbst-listing-box .plan-sub-header {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 8px 0 10px
+}
+
+.sbst-listing-box .plan-sub-header .plan-caption {
+    font-size: 20px;
+    font-family: "Roboto Condensed";
+    margin-top: 7px
+}
+
+.sbst-listing-box .plan-sub-header .plan-caption:hover {
+    color: #444444
+}
+
+.sbst-listing-box .plan-sub-header .actions .compare {
+    border: none;
+    padding: 12px;
+    background: url(https://www.architecturaldesigns.com/assets/v2.0/plan_card/ic_compare-53e4fba3409cb04df39e56d2ad4c7f5b1302afe321dff92609c3ef3e4518b2eb.svg) no-repeat;
+    background-position: top
+}
+
+.sbst-listing-box .plan-sub-header .actions .hide-action {
+    border: none;
+    padding: 12px;
+    background: url(https://www.architecturaldesigns.com/assets/v2.0/plan_card/ic_hide-e152d96289f663defcf38190a45368d316a2c657239e079d305457c96fde4bde.svg) no-repeat;
+    background-position: top
+}
+
+.sbst-listing-box .plan-sub-header .actions .unhide-action {
+    border: none;
+    padding: 12px;
+    background: url(https://www.architecturaldesigns.com/assets/v2.0/plan_card/ic_unhide-4666e51445419233fb9d2a4af3c1d594f395255894ccd86251e468bce8b348ba.svg) no-repeat;
+    background-position: top
+}
+
+.sbst-listing-box .plan-sub-header .actions .sbst-listing-box-favorite {
+    border: none;
+    padding: 13px
+}
+
+.sbst-listing-box .plan-sub-header .actions .sbst-listing-box-favorite.large-gray-star {
+    background: url(https://www.architecturaldesigns.com/assets/v2.0/plan_card/ic_fav_empty-b2dc15db983cdbed34babbcda7e7e37aa0d9ba529396b8476818089b83ea55ef.svg) no-repeat;
+    background-size: 20px;
+    background-position: center
+}
+
+.sbst-listing-box .plan-sub-header .actions .sbst-listing-box-favorite.large-gold-star {
+    background-size: 20px !important;
+    background-position: center !important;
+    background: url(https://www.architecturaldesigns.com/assets/v2.0/plan_card/ic_fav_filled-f6c51429b2c3926a4f2b7d78a4f6d163a55bf3e5b597544682eaf6e949c7ffbd.svg) no-repeat
+}
+
+.sbst-listing-box .image-box.category {
+    position: relative
+}
+
+.sbst-listing-box .image-box.category:after {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: all 0.5s;
+    -moz-transition: all 0.5s;
+    -ms-transition: all 0.5s;
+    -o-transition: all 0.5s;
+    -webkit-transition: all 0.5s;
+    border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    -o-border-radius: 5px 5px 5px 5px;
+    -ms-border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px
+}
+
+.sbst-listing-box .image-box.category span {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    text-align: center;
+    text-transform: capitalize;
+    color: #ffffff;
+    z-index: 10;
+    font-size: 20px;
+    font-family: "HelveticaNeue"
+}
+
+.sbst-listing-box .image-box.category img {
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    -webkit-border-radius: 5px
+}
+
+.sbst-listing-box a:hover .image-box.category:after {
+    background: rgba(0,0,0,0.6)
+}
+
+.sbst-listing-box .info {
+    display: flex;
+    list-style: none;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 10px
+}
+
+.sbst-listing-box .info li {
+    display: inline-block;
+    flex: 1;
+    margin-right: 0;
+    padding: 0;
+    margin: 0px
+}
+
+.sbst-listing-box .info li .h3 {
+    color: #444444;
+    font-family: "Roboto", sans-serif;
+    font-size: 13px !important;
+    margin-top: 0px;
+    line-height: 20px
+}
+
+.sbst-listing-box .info li p {
+    margin-bottom: 0;
+    text-transform: capitalize;
+    font-family: "Roboto Condensed", sans-serif;
+    color: #84919A;
+    font-size: 13px
+}
+
+.sbst-listing-box .info li.borderLR {
+    border-left: 1px solid #d6d6d6;
+    border-right: 1px solid #d6d6d6
+}
+
+.sbst-listing-box .plan-footer {
+    padding: 8px 15px;
+    text-transform: uppercase;
+    border-radius: 0 0 5px 5px;
+    -moz-border-radius: 0 0 5px 5px;
+    -ms-border-radius: 0 0 5px 5px;
+    -webkit-border-radius: 0 0 5px 5px;
+    -o-border-radius: 0 0 5px 5px;
+    background: #f6f6f6
+}
+
+.sbst-listing-box .plan-footer p {
+    margin-bottom: 0
+}
+
+.sbst-listing-box .plan-footer p .h4 {
+    margin-left: 10px
+}
+
+.sbst-listing-box .plan-footer p a:hover {
+    text-decoration: none
+}
+
+.sbst-listing-box .plan-footer .large-gray-star {
+    padding: 0;
+    border: none;
+    position: relative;
+    top: 3px
+}
+
+.sbst-listing-box .plan-footer .large-gray-star:focus {
+    outline: none
+}
+
+.sbst-listing-box .plan-footer .large-gold-star {
+    padding: 0;
+    border: none;
+    position: relative;
+    top: 3px
+}
+
+.sbst-listing-box .plan-footer .large-gold-star:focus {
+    outline: none
+}
+
+.sbst-listing-box .plan-footer .large-white-star {
+    border-right: 1px solid #d6d6d6;
+    padding-right: 45px
+}
+
+#featured-plan .sbst-listing-box {
+    max-width: 300px
+}
+    /* Optional: Custom styles for the breadcrumbs */
+.breadcrumb {
+  background-color: #f8f9fa; /* Bootstrap breadcrumb default background */
+}
+
+/* Custom styles for the price */
+.price {
+  font-size: 1.5rem; /* Example size */
+  color: green; /* Example color */
+  font-weight: bold;
+}
+
+/* Footer styles */
+.footer {
+  background-color: #f5f5f5; /* Example background color */
+}
+
+/* Styles for form and checkboxes */
+.container {
+  max-width: 960px; /* Set container max-width to match design */
+}
+
+/* Spacing and font styles for labels */
+.form-label {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+/* Bold font for category titles */
+.font-weight-bold {
+  font-weight: bold;
+}
+
+/* Bootstrap overrides for checkboxes to match design */
+.form-check-input {
+  margin-top: 0.3rem;
+  margin-left: 0;
+}
+
+/* Adjust inline checkboxes for log diameter */
+.form-check-inline .form-check-input {
+  margin-right: 0.25rem;
+}
+
+/* Styles for the submit button */
+.btn-primary {
+  background-color: #0056b3; /* Example primary color */
+  border-color: #004085; /* Darker border color for button */
+}
+
+.flex.flex-param {
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    color: #969696;
+    border-top: 1px solid #c8c8c8;
+    border-bottom: 1px solid #c8c8c8;
+    font-size: 170%;
+}
+
+.flex {
+    display: flex;
+    -webkit-box-align: start;
+    align-items: flex-start;
+    -ms-flex-align: start;
+    -ms-flex-wrap: nowrap;
+    flex-wrap: nowrap;
+    -webkit-box-pack: start;
+    -ms-flex-pack: start;
+    justify-content: flex-start;
+}
+
+.flex.flex-param .param {
+    width: 50%;
+    margin-right: 30px;
+    white-space: nowrap;
+    color: gray;
+}
