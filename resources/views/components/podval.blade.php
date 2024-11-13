@@ -14,7 +14,7 @@
         </div>
     </div>
     <div class="feedback-circle" onclick="toggleFeedbackForm()">
-        <span>+</span>
+        <i class="fas fa-comments"></i>
     </div>
     <div class="feedback-form" id="feedbackForm">
     <form method="POST" action="{{ route('send.feedback') }}" onsubmit="return confirmSubmission()">
@@ -41,7 +41,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 24px;
+    font-size: 20px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
@@ -92,6 +92,17 @@ function toggleFeedbackForm() {
         form.style.display = 'none';
     }
 }
+
+// Add click event listener to the document
+document.addEventListener('click', function(event) {
+    var form = document.getElementById('feedbackForm');
+    var circle = document.querySelector('.feedback-circle');
+    
+    // If click is outside form and circle, close the form
+    if (!form.contains(event.target) && !circle.contains(event.target)) {
+        form.style.display = 'none';
+    }
+});
 
 function confirmSubmission() {
     return confirm('Отправить запрос?');
