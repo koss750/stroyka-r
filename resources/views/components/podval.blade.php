@@ -56,6 +56,7 @@
     padding: 15px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     width: 300px;
+    z-index: 10;
 }
 
 .feedback-form input,

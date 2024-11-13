@@ -16,11 +16,7 @@ class RestoreDbBackupCommand extends Command
     public function handle()
     {
         $databaseName = env('DB_DATABASE');
-        $userName = "root";
-        $password = $this->ask('Please enter MySQL Root user password');
-
         $backupFile = $this->argument('backupFile') ?? $this->chooseBackupFile();
-
         $fullPath = storage_path('backups/' . $backupFile);
 
         if (!File::exists($fullPath)) {
@@ -28,21 +24,34 @@ class RestoreDbBackupCommand extends Command
             return;
         }
 
-        // Drop and recreate the database
-        DB::statement("DROP DATABASE IF EXISTS {$databaseName}");
-        DB::statement("CREATE DATABASE {$databaseName}");
+        // Drop and recreate database using sudo
+        $dropDb = Process::fromShellCommandline("sudo mysql -e 'DROP DATABASE IF EXISTS {$databaseName}'");
+        $dropDb->run();
+        if (!$dropDb->isSuccessful()) {
+            throw new ProcessFailedException($dropDb);
+        }
 
-        // Import the backup file
-        $command = sprintf('mysql -u %s -p%s %s < %s',
-            $userName, $password, $databaseName, $fullPath);
+        $createDb = Process::fromShellCommandline("sudo mysql -e 'CREATE DATABASE {$databaseName}'");
+        $createDb->run();
+        if (!$createDb->isSuccessful()) {
+            throw new ProcessFailedException($createDb);
+        }
 
+        // Import the backup file using sudo with increased timeout
+        $command = sprintf('sudo mysql %s < %s', $databaseName, $fullPath);
         $process = Process::fromShellCommandline($command);
-        $process->run();
+        $process->setTimeout(3600); // Set timeout to 1 hour
+        
+        $this->info('Starting database import...');
+        $process->run(function ($type, $buffer) {
+            $this->output->write('.');
+        });
 
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
 
+        $this->newLine();
         $this->info('Database restored successfully from ' . $backupFile);
     }
 
