@@ -3,7 +3,7 @@
         <div class="row align-items-center">
             <div id="logoContainer" class="col-4 col-3-sm">
                 <div class="headerLogo">
-                    <a href="https://xn--80ardojfh.com">
+                    <a href="../site">
                         <img src="{{ asset('assets/images/logo5.png') }}" alt="Стройка.com" class="logo-image">
                     </a>
                 </div>
