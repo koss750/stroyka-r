@@ -15,8 +15,8 @@ class TinkoffService
 
     public function __construct()
     {
-        $this->terminalKey = config('services.tinkoff.terminal_key');
-        $this->secretKey = config('services.tinkoff.secret_key');
+        $this->terminalKey = env('TINKOFF_TERMINAL_KEY');
+        $this->secretKey = env('TINKOFF_SECRET_KEY');
         $this->apiUrl = "https://rest-api-test.tinkoff.ru/v2/Init";
     }
 
@@ -24,7 +24,7 @@ class TinkoffService
     {
         // Create a new array with only root-level parameters
         $tokenData = [
-            'TerminalKey' => $data['TerminalKey'],
+            'TerminalKey' => $this->terminalKey,
             'Amount' => $data['Amount'],
             'OrderId' => $data['OrderId'],
             'Description' => $data['Description'],
@@ -39,7 +39,7 @@ class TinkoffService
         foreach ($tokenData as $value) {
             $plainString .= $value;
         }
-        
+        //dd($tokenData, $plainString, hash('sha256', $plainString));
         // Generate SHA-256 hash
         return hash('sha256', $plainString);
     }
@@ -48,7 +48,7 @@ class TinkoffService
     {
         $data = [
             'TerminalKey' => $this->terminalKey,
-            'Amount' => $params['amount'] * 100,
+            'Amount' => $params['amount'],
             'OrderId' => $params['orderId'],
             'Description' => $params['description'],
             'DATA' => [
@@ -61,34 +61,35 @@ class TinkoffService
                 'Taxation' => "osn",
                 'Items' => [
                     [
-                        "Name" => "Наименование товара 1",
-                        "Price" => $params['amount'] ,
+                        "Name" => $params['description'],
+                        "Price" => $params['amount'],
                         "Quantity" => 1,
                         "Amount" => $params['amount'],
-                        "Tax" => "vat0",
-                        "Ean13" => "303130323930303030630333435"
+                        "Tax" => "vat10"
                     ]
                 ]
             ]
         ];
-
+        
         $data['Token'] = $this->generateToken($data);
-
         try {
+            // Modify the request to ensure proper encoding
+            $response = Http::withHeaders([
+                'Content-Type' => 'application/json;charset=UTF-8'
+            ])->post($this->apiUrl, $data);
             
-            $response = Http::post($this->apiUrl, $data);
-            dd($response->json());
             if (!$response->successful()) {
                 //Log::error('Tinkoff API error:', $response->json());
                 throw new \Exception('Tinkoff API error: ' . $response->body());
             }
 
-            $responseData = $response->json();
-            
-            
+            $responseData = json_decode($response->body(), true) ?? null;
+            $url = $responseData['PaymentURL'] ?? null;
+            $payment_id = $responseData['PaymentId'] ?? null;
             // Return both the payment URL from Tinkoff's response and our request data
             return [
-                'paymentUrl' => $responseData['PaymentURL'] ?? $response->body(),
+                'paymentUrl' => $url,
+                'payment_id' => $payment_id,
                 'paymentData' => $data
             ];
         } catch (\Exception $e) {

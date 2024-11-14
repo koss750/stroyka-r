@@ -20,6 +20,7 @@
             $modal_id = "paymentModal";
             $label = "Стоимость сметы на фундамент";
             $button_label = "Оплатить";
+            $price = 100;
         }
     } else {
         $order_type = 'smeta';
@@ -30,6 +31,9 @@
             $label = "Пример сметы по выбранным параметрам";
             $button_label = "Скачать пример сметы";
         } else {
+            $priceMaterial = $price['smeta_project'];
+            $priceLabour = $price['smeta_project_labour'];
+            $price = 100;
             $example = false;
             $modal_id = "paymentModal";
             $label = "Стоимость сметы";
@@ -69,25 +73,26 @@
                                     <input type="text" class="form-control" id="password" name="password" required>
                                 </div>
                             @endguest
-                            @if ($price > 0)
+                            @if ($price > 0 && isset($priceMaterial))
                             <div class="form-group">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="price_type" id="price_type_material" value="material" checked>
+                                    <input class="form-check-input" type="radio" name="price_type" id="price_type_material" value="smeta_project|{{ $priceMaterial }}" checked>
                                     <label class="form-check-label" for="price_type_material">
-                                        Только материалы (200₽)
+                                        Только материалы ({{ $priceMaterial }}₽)
                                     </label>
                                 </div>
                                 <div class="form-check">
-                                    <input class="form-check-input" type="radio" name="price_type" id="price_type_total" value="total" {{ $price == 0 ? 'disabled' : '' }}>
+                                    <input class="form-check-input" type="radio" name="price_type" id="price_type_total" value="smeta_project_labour|{{ $priceLabour }}" {{ $price == 0 ? 'disabled' : '' }}>
                                     <label class="form-check-label" for="price_type_total">
-                                        Материалы и работы (400₽)
+                                        Материалы и работы ({{ $priceLabour }}₽)
                                     </label>
                                 </div>
                             </div>
+                            @else
+                                <input type="hidden" name="price_type" value="smeta_project|{{ $price }}">
+                                <input type="hidden" name="amount" value="{{ $price }}">
                             @endif
-                            <input type="hidden" name="amount" value="{{ $price }}">
-                            <input type="hidden" name="orderId" value="{{ $id }}">
-                            <input type="hidden" name="description" value="смета на дом">
+                            <input type="hidden" name="description" value="Cмета на дом">
 
                             @if ($price == 0)
                                 <button id="example_pay_button" type="button" class="btn btn-outline-light">{{ $button_label }}</button>
@@ -177,13 +182,14 @@
         async function submitOrder(provider) {
             const form = document.getElementById('{{ $modal_id }}_paymentForm');
             const formData = new FormData(form);
-            const selectedPriceType = document.querySelector('input[name="price_type"]:checked')?.value || 'material';
-
+            const priceType = formData.get('price_type').split('|');
+            const selectedPrice = priceType[0];
+            const selectedPriceAmount = priceType[1];
             let orderData = {
                 payment_provider: provider,
-                payment_amount: selectedPriceType === 'material' ? 200 : 400,
+                payment_amount: selectedPriceAmount,
                 order_type: '{{ $order_type }}',
-                price_type: selectedPriceType,
+                price_type: selectedPrice,
                 @guest
                     logged_in: false,
                     name: formData.get('name'),
@@ -225,7 +231,7 @@
 
             // Determine the correct endpoint based on type and provider
             const endpoint = provider === 'example' 
-                ? ('{{ $type }}' === 'foundation' ? '/process-example-foundation-order' : '/process-example-smeta-order')
+                ? ('{{ $type }}' === 'foundation' ? '/process-example-foundation-order' : '/api/tinkoff/init')
                 : '/api/tinkoff/init';
             
             console.log('Submitting order to:', endpoint, orderData);
@@ -239,7 +245,6 @@
                 },
                 body: JSON.stringify(orderData)
             });
-
             return response.json();
         }
 
@@ -272,12 +277,7 @@
 
             try {
                 const response = await submitOrder('tinkoff');
-                const responseDiv = document.getElementById('tinkoffResponse');
-                if (responseDiv && response.paymentUrl) {
-                    responseDiv.innerHTML = response.paymentUrl;
-                } else {
-                    throw new Error('Invalid payment response');
-                }
+                window.location.href = response.paymentUrl;
             } catch (error) {
                 console.error('Payment error:', error);
                 alert('Ошибка платежа');

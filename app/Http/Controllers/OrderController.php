@@ -54,6 +54,8 @@ class OrderController extends Controller
 
         if (Auth::check() && $request->input('logged_in')) {
             $user = Auth::user();
+        } elseif ($request->input('user_id')) {
+            $user = User::find($request->input('user_id'));
         } elseif (!$request->input('logged_in')) {
             $registerController = new RegisterController();
             $user = $registerController->create($request, true);
@@ -62,6 +64,7 @@ class OrderController extends Controller
             return response()->json(['error' => 'Logged in user check failed'], 401);
         }
         $price_type = $request->input('price_type');
+        $payment_reference = (string)(random_int(1000000000, 9999999999));
         $price_type_label = $price_type === 'material' ? 'Только материалы' : ($price_type === 'total' ? 'Материалы и работы' : 'Материалы, работы и доставка');
         //assign design
         $design = Design::find($request->input('design_id'));
@@ -74,16 +77,45 @@ class OrderController extends Controller
         $project = Project::find($orderId);
         $payment_amount = $request->input('payment_amount');
         
+        if ($request->input('payment_amount') > 0) {
+            
+            if (env('PAYMENT_PROVIDER') === 'TEST-POS') {
+                $result = [
+                    'paymentUrl' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => base64_encode($project->human_ref)]),
+                    'payment_id' => $payment_reference
+                ];
+            } else {
+                try {
+                    $tinkoff = app(TinkoffService::class);
+                    //dd($request->all());
+                    $result = $tinkoff->initPayment([
+                        'amount' => $request->input('payment_amount')*100,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'orderId' => $project->human_ref,
+                        'description' => $orderDesignTitle,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Tinkoff payment error: ' . $e->getMessage());
+                    return response()->json(['error' => 'Payment system error'], 500);
+                }
+            }
+        } else {
+            $result = [
+                'paymentUrl' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => base64_encode($project->human_ref)]),
+                'payment_id' => $payment_reference
+            ];
+        }
+
         $description = $orderDesignTitle;
-        $payment_reference = (string)(random_int(1000000000, 9999999999));
-        $paymentUrl = $this->yandexPayCallback(base64_encode($project->human_ref), $payment_reference, $description, $payment_amount);
+        $paymentUrl = $result['paymentUrl'];
         $project->payment_provider = env('PAYMENT_PROVIDER');
         $project->payment_link = $paymentUrl;
         $project->payment_reference = $payment_reference;
         $project->payment_status = 'pending';
         $project->price_type = $price_type;
         $project->save();
-        $user->notify(new ReceiptNotification($project, $design, $user->email));
+        //$user->notify(new ReceiptNotification($project, $design, $user->email));
         return response()->json([
             'success' => true,
             'paymentUrl' => $paymentUrl
@@ -104,7 +136,6 @@ class OrderController extends Controller
         }
 
 
-        dd($request->all());
         /*
         payment_provider: 'yandex',
                     payment_amount: 1,
@@ -237,7 +268,6 @@ class OrderController extends Controller
             }
         } else {
             $errorMessage = $response->body();
-            dd($errorMessage);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to create Yandex Pay order: ' . $errorMessage
@@ -268,13 +298,35 @@ class OrderController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function initOrder(Request $request, $provider = 'default')
+    {
+        if ($provider === 'default') {
+            $provider = env('PAYMENT_PROVIDER');
+        } elseif ($provider === 'free') {
+            return true;
+        }
+        $response = $this->processProjectSmetaOrder($request);
+        switch ($provider) {
+            case 'TINKOFF-SB':
+                try {
+                    return $this->initTinkoffPayment($request);
+                } catch (\Exception $e) {
+                    Log::error('Tinkoff payment error: ' . $e->getMessage());
+                        return response()->json(['error' => 'Payment system error'], 500);
+                    }
+                    break;
+                default:
+                    return response()->json(['error' => 'Invalid payment provider'], 400);
+        }
+    }
+
     public function initTinkoffPayment(Request $request)
     {
         try {
             $tinkoff = app(TinkoffService::class);
-            
+            //dd($request->all());
             $result = $tinkoff->initPayment([
-                'amount' => $request->input('amount'),
+                'amount' => $request->input('payment_amount'),
                 'email' => $request->input('email'),
                 'phone' => $request->input('phone'),
                 'orderId' => $request->input('orderId'),

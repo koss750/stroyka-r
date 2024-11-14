@@ -23,6 +23,7 @@ use Illuminate\Support\Facades\Http;
 use App\Models\Region;
 use App\Models\Foundation;
 use Illuminate\Support\Facades\Cache;
+use App\Models\PricePlan;
 
 
 
@@ -430,7 +431,6 @@ $html .= '<thead class="thead-dark">';
     $design->etiketka = number_format($design->etiketka, 2, '.', ' ');
     $design->reviewCount = 10;
     $design = $this->transformDesign($design);
-
     $data = InvoiceType::all();
 
     $user = Auth::user();
@@ -610,7 +610,7 @@ private function getPriceFromDb($id, $invoice_type_id)
         } else $price_type_string = "";
 
         $configuration_string = $configuration_string . " (" . $price_type_string . ")";
-
+        
         return [
             'id' => $project->human_ref,
             'order_id' => $project->id,
@@ -634,6 +634,36 @@ private function getPriceFromDb($id, $invoice_type_id)
                 'company_name' => $project->executor->supplier->company_name ?? null,
             ] : null,
         ];
+    }
+
+    private function calculateServicePrice($design)
+    {
+        $service_prices = [];
+        
+        // Get only price plans for Design entity
+        $pricePlans = PricePlan::when($design instanceof Design, function($query) {
+            return $query->where('dependent_entity', 'Design');
+        })->get();
+        
+        foreach ($pricePlans as $plan) {
+            $price = 0;
+            
+            if ($plan->dependent_type === 'range' && $plan->dependent_parameter === 'size') {
+                $size = $design->size;
+                $ranges = $plan->parameter_option;
+                
+                foreach ($ranges as $range) {
+                    if ($size >= $range['from'] && $size <= $range['to']) {
+                        $price = $range['price'];
+                        break;
+                    }
+                }
+            }
+            
+            $service_prices[$plan->code] = $price;
+        }
+        $service_prices['example_document'] = 0;
+        return $service_prices;
     }
 
     // Add this new method to handle foundation transformations
@@ -730,6 +760,7 @@ private function getPriceFromDb($id, $invoice_type_id)
         $design->setPrice($design);
         $design->setMaterialDescription();
         $design->setDefaultRef();
+        $design->service_prices = $this->calculateServicePrice($design);
         $design->image_url = $design->mildMailImage();
         // Add smetaPrice calculation
         $design->smeta_price = $this->calculateSmetaPrice($design->size);

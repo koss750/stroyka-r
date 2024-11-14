@@ -116,7 +116,7 @@
                </div>
             </div>
       <!-- Payment Modal -->
-      @component('components.payment-modal', ['id' => $design->id, 'title' => $design->title, 'image' => $design->image_url, 'price' => $design->smeta_price])
+      @component('components.payment-modal', ['id' => $design->id, 'title' => $design->title, 'image' => $design->image_url, 'price' => $design->service_prices])
 @endcomponent
 @component('components.payment-modal', ['id' => 1, 'title' => "Пример сметы", 'image' => $design->image_url, 'price' => 0])
 @endcomponent
