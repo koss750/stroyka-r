@@ -16,6 +16,9 @@ class RestoreDbBackupCommand extends Command
     public function handle()
     {
         $databaseName = env('DB_DATABASE');
+        $host = env('DB_HOST');
+        $username = env('DB_USERNAME');
+        $password = env('DB_PASSWORD');
         $backupFile = $this->argument('backupFile') ?? $this->chooseBackupFile();
         $fullPath = storage_path('backups/' . $backupFile);
 
@@ -23,22 +26,15 @@ class RestoreDbBackupCommand extends Command
             $this->error("$backupFile file does not exist in the backups folder.");
             return;
         }
-
-        // Drop and recreate database using sudo
-        $dropDb = Process::fromShellCommandline("sudo mysql -e 'DROP DATABASE IF EXISTS {$databaseName}'");
-        $dropDb->run();
-        if (!$dropDb->isSuccessful()) {
-            throw new ProcessFailedException($dropDb);
-        }
-
-        $createDb = Process::fromShellCommandline("sudo mysql -e 'CREATE DATABASE {$databaseName}'");
-        $createDb->run();
-        if (!$createDb->isSuccessful()) {
-            throw new ProcessFailedException($createDb);
-        }
-
-        // Import the backup file using sudo with increased timeout
-        $command = sprintf('sudo mysql %s < %s', $databaseName, $fullPath);
+        // Import the backup file with remote credentials
+        $command = sprintf(
+            'mysql -h %s -u %s --password="%s" %s < %s --port 15652',
+            escapeshellarg($host),
+            escapeshellarg($username),
+            escapeshellarg($password),
+            escapeshellarg($databaseName),
+            escapeshellarg($fullPath)
+        );
         $process = Process::fromShellCommandline($command);
         $process->setTimeout(3600); // Set timeout to 1 hour
         

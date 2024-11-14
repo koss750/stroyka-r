@@ -4,7 +4,11 @@
             <div id="logoContainer" class="col-4 col-3-sm">
                 <div class="headerLogo">
                     <a href="../site">
-                        <img src="{{ asset('assets/images/logo5.png') }}" alt="Стройка.com" class="logo-image">
+                        @if (env('TEST_ENVIRONMENT') != 'true')
+                            <img src="{{ asset('assets/images/logo5.png') }}" alt="Стройка.com" class="logo-image">
+                        @else
+                            <p class="test-environment">ТЕСТОВАЯ СРЕДА</p>
+                        @endif
                     </a>
                 </div>
             </div>
@@ -608,4 +612,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
-
+<style>
+    .test-environment {
+        color: #ff6b6b;
+        border: 1px solid #ff6b6b;
+        border-radius: 5px;
+        padding: 5px;
+    }
+</style>

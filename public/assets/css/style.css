@@ -1,11 +1,11 @@
 @font-face {
     font-family: 'tilda-sans_regular';
-    src: url('https://xn--80ardojfh.com/assets/fonts/tilda-sans_regular.woff') format('woff');
+    src: url('../fonts/tilda-sans_regular.woff') format('woff');
     font-weight: regular;
 }
 @font-face {
     font-family: 'tilda-sans_semibold';
-    src: url('https://xn--80ardojfh.com/assets/fonts/tilda-sans_semibold.woff') format('woff');
+    src: url('../fonts/tilda-sans_semibold.woff') format('woff');
     font-weight: semibold;
 }
 @media (min-width: 1200px) {

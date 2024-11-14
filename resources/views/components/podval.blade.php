@@ -21,7 +21,8 @@
     @csrf
     <input type="text" name="name" placeholder="Ваше имя" required>
     <input type="email" name="email" placeholder="Ваш email" required>
-    <textarea name="message" placeholder="Ваше сообщение"></textarea>
+    <textarea name="message" placeholder="Ваше сообщение" maxlength="1000" onkeyup="updateCounter(this)"></textarea>
+    <div class="char-counter"><span id="charCount">1000</span> символов осталось. Файлы и длинные сообщения присылайте на <a href="mailto:info@стройка.com">info@стройка.com</a></div>
         <button type="submit">Отправить</button>
     </form>
     </div>
@@ -81,6 +82,17 @@
 .feedback-form button:hover {
     background-color: #0056b3;
 }
+
+.char-counter {
+    font-size: 12px;
+    color: #666;
+    text-align: right;
+    margin-bottom: 10px;
+}
+
+.char-counter.limit-close {
+    color: #ff6b6b;
+}
 </style>
 
 <script>
@@ -106,5 +118,20 @@ document.addEventListener('click', function(event) {
 
 function confirmSubmission() {
     return confirm('Отправить запрос?');
+}
+
+function updateCounter(textarea) {
+    const maxLength = 1000;
+    const remaining = maxLength - textarea.value.length;
+    const counter = document.getElementById('charCount');
+    counter.textContent = remaining;
+    
+    // Change color when approaching limit
+    const counterDiv = counter.parentElement;
+    if (remaining < 100) {
+        counterDiv.classList.add('limit-close');
+    } else {
+        counterDiv.classList.remove('limit-close');
+    }
 }
 </script>
