@@ -81,7 +81,6 @@ class TinkoffService
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json;charset=UTF-8'
             ])->post($this->apiUrl, $data);
-            dd($response->body());
             if (!$response->successful()) {
                 //Log::error('Tinkoff API error:', $response->json());
                 throw new \Exception('Tinkoff API error: ' . $response->body());
