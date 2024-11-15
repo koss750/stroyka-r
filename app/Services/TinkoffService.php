@@ -24,11 +24,9 @@ class TinkoffService
     {
         // Create a new array with only root-level parameters
         $tokenData = [
-            'TerminalKey' => $this->terminalKey,
             'Amount' => $data['Amount'],
             'OrderId' => $data['OrderId'],
             'Description' => $data['Description'],
-            'Password' => 'T^el5&GlZ#AkYg65'
         ];
         
         // Sort by key
@@ -39,6 +37,7 @@ class TinkoffService
         foreach ($tokenData as $value) {
             $plainString .= $value;
         }
+        $plainString .= $this->secretKey . $this->terminalKey;
         //dd($tokenData, $plainString, hash('sha256', $plainString));
         // Generate SHA-256 hash
         return hash('sha256', $plainString);
@@ -47,7 +46,7 @@ class TinkoffService
     public function initPayment(array $params)
     {
         if (env('TEST_ENVIRONMENT') == true) {
-            $params['amount'] = 10;
+            $params['amount'] = 1000;
         }
         $data = [
             'TerminalKey' => $this->terminalKey,
@@ -82,7 +81,7 @@ class TinkoffService
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json;charset=UTF-8'
             ])->post($this->apiUrl, $data);
-            
+            dd($response->body());
             if (!$response->successful()) {
                 //Log::error('Tinkoff API error:', $response->json());
                 throw new \Exception('Tinkoff API error: ' . $response->body());
