@@ -32,7 +32,7 @@ class ImageConversionCommand extends Command
         if ($designId) {
             $query = Design::where('id', $designId);
         } elseif ($recentOnly) {
-            $query = Design::where('updated_at', '>=', Carbon::now()->subDays(10));
+            $query = Design::where('updated_at', '>=', Carbon::now()->subDays(1));
         }
 
         $designs = $query->get();

@@ -72,9 +72,9 @@
     </div>
 </div>
 
-@component('components.foundation-payment-modal', ['id' => $foundation->id, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => 0])
+@component('components.payment-modal', ['type' => 'foundation', 'id' => 1, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => 0])
 @endcomponent
-@component('components.foundation-payment-modal', ['id' => $foundation->id, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => 500])
+@component('components.payment-modal', ['type' => 'foundation', 'id' => $foundation->id, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => 500])
 @endcomponent
 @endsection
 

@@ -22,8 +22,8 @@
             $button_label = "Оплатить";
             $price = 100;
         }
-    } else {
-        $order_type = 'smeta';
+    } else if ($type === 'design') {
+        $order_type = 'design';
         if ($id == 1) {
             $example = true;
             $price = 0;
@@ -73,7 +73,7 @@
                                     <input type="text" class="form-control" id="password" name="password" required>
                                 </div>
                             @endguest
-                            @if ($price > 0 && isset($priceMaterial))
+                            @if ($price > 0 && $order_type == 'design')
                             <div class="form-group">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="price_type" id="price_type_material" value="smeta_project|{{ $priceMaterial }}" checked>
@@ -88,8 +88,11 @@
                                     </label>
                                 </div>
                             </div>
-                            @else
+                            @elseif ($order_type == 'design' && $price == 0)
                                 <input type="hidden" name="price_type" value="smeta_project|{{ $price }}">
+                                <input type="hidden" name="amount" value="{{ $price }}">
+                            @elseif ($order_type == 'foundation' && $price == 0)
+                                <input type="hidden" name="price_type" value="foundation|{{ $price }}">
                                 <input type="hidden" name="amount" value="{{ $price }}">
                             @endif
                             <input type="hidden" name="description" value="Cмета на дом">
@@ -109,13 +112,14 @@
                             <h5>Проект {{ $title }}</h5>
                             <img src="{{ $image }}" alt="{{ $title }}" class="img-fluid mb-3">
                         @endif
-                        
-                        <h5>Выбранные параметры:</h5>
-                        <ul class="list-unstyled">
-                            <li><strong>Фундамент:</strong> <span id="{{ $modal_id }}_foundation"></span></li>
-                            <li><strong>Домокомплект:</strong> <span id="{{ $modal_id }}_dd"></span></li>
-                            <li><strong>Кровля:</strong> <span id="{{ $modal_id }}_roof"></span></li>
-                        </ul>
+                        @if ($type === 'design')
+                            <h5>Выбранные параметры:</h5>
+                            <ul class="list-unstyled">
+                                <li><strong>Фундамент:</strong> <span id="{{ $modal_id }}_foundation"></span></li>
+                                <li><strong>Домокомплект:</strong> <span id="{{ $modal_id }}_dd"></span></li>
+                                <li><strong>Кровля:</strong> <span id="{{ $modal_id }}_roof"></span></li>
+                            </ul>
+                        @endif
                         <p class="mt-3">После создания, смета будет доступна для скачивания 30 дней через личный кабинет.</p>
                     </div>
                 </div>
@@ -277,6 +281,7 @@
 
             try {
                 const response = await submitOrder('tinkoff');
+                console.log(response);
                 window.location.href = response.paymentUrl;
             } catch (error) {
                 console.error('Payment error:', error);

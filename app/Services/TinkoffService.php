@@ -17,7 +17,7 @@ class TinkoffService
     {
         $this->terminalKey = env('TINKOFF_TERMINAL_KEY');
         $this->secretKey = env('TINKOFF_SECRET_KEY');
-        $this->apiUrl = "https://rest-api-test.tinkoff.ru/v2/Init";
+        $this->apiUrl = "https://securepay.tinkoff.ru/v2/Init";
     }
 
     public function generateToken(array $data): string
@@ -28,7 +28,7 @@ class TinkoffService
             'Amount' => $data['Amount'],
             'OrderId' => $data['OrderId'],
             'Description' => $data['Description'],
-            'Password' => $this->secretKey
+            'Password' => 'T^el5&GlZ#AkYg65'
         ];
         
         // Sort by key
@@ -46,6 +46,9 @@ class TinkoffService
 
     public function initPayment(array $params)
     {
+        if (env('TEST_ENVIRONMENT') == true) {
+            $params['amount'] = 10;
+        }
         $data = [
             'TerminalKey' => $this->terminalKey,
             'Amount' => $params['amount'],
@@ -54,6 +57,8 @@ class TinkoffService
             'DATA' => [
                 'Email' => $params['email'],
                 'Phone' => $params['phone'],
+                "TinkoffPayWeb" => "true",
+                "Device" => "Desktop",
             ],
             'Receipt' => [
                 'Email' => $params['email'],

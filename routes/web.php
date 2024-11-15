@@ -28,6 +28,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\TurboPageController;
 use App\Http\Controllers\FeedbackController;
+use Illuminate\Support\Facades\Cache;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -45,6 +46,15 @@ Route::get('/', function () {
 
 Route::get('/home', function () {
     return redirect('/site');
+});
+
+Route::get('/clear-cache', function () {
+    Cache::flush();
+    return redirect('/site');
+});
+
+Route::get('/tinkoff-payment-iframe/{urlcontent}', function ($urlcontent) {
+    return base64_decode($urlcontent);
 });
 
 //under construction - переделать

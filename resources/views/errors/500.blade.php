@@ -1,14 +1,59 @@
-@extends('layouts.fullwidth')
+@extends('layouts.alternative')
+
+@section('canonical', '')
+
+@section('additional_head')
+<title>Страница не найдена</title>
+<meta name="description" content="Страница не найдена">
+<meta name="robots" content="noindex, nofollow">
+@endsection
 
 @section('content')
-<div class="col-md-6">
-    <div class="form-input-content text-center error-page">
-        <h1 class="error-text font-weight-bold">500</h1>
-        <h4><i class="fa fa-times-circle text-danger"></i> Internal Server Error</h4>
-        <p>You do not have permission to view this resource</p> 
-        <div>
-            <a class="btn btn-primary" href="{{ url('index')}}">Back to Home</a>
-        </div>	
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            font-size: 6rem;
+            margin: 0;
+            color: #333;
+        }
+        p {
+            font-size: 1.5rem;
+            color: #666;
+        }
+        a {
+            color: #0066cc;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .lang {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="lang">
+            <h2>500</h2>
+            <p>Упс! Что то пошло не так.</p>
+            <p>Извиняемся за доставленные неудобства.</p>
+            <p><a href="../site">Вернуться на главную страницу</a></p>
+        </div>
     </div>
-</div>
-@endsection
+</body>
+</html>
