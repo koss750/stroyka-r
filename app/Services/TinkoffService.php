@@ -17,7 +17,7 @@ class TinkoffService
     {
         $this->terminalKey = env('TINKOFF_TERMINAL_KEY');
         $this->secretKey = env('TINKOFF_SECRET_KEY');
-        $this->apiUrl = "https://securepay.tinkoff.ru/v2/Init";
+        $this->apiUrl = env('TINKOFF_API_URL');
     }
 
     public function generateToken(array $data): string
@@ -45,14 +45,14 @@ class TinkoffService
 
     public function initPayment(array $params)
     {
-        if (env('TEST_ENVIRONMENT') == true) {
-            $params['amount'] = 1000;
-        }
+        $base64ref = base64_encode($params['orderId']);
         $data = [
             'TerminalKey' => $this->terminalKey,
             'Amount' => $params['amount'],
             'OrderId' => $params['orderId'],
             'Description' => $params['description'],
+            'SuccessURL' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => $base64ref]),
+            'FailURL' => route('payment.set.status', ['payment_status' => 'error', 'order_id' => $base64ref]),
             'DATA' => [
                 'Email' => $params['email'],
                 'Phone' => $params['phone'],
@@ -80,7 +80,7 @@ class TinkoffService
             // Modify the request to ensure proper encoding
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json;charset=UTF-8'
-            ])->post($this->apiUrl, $data);
+            ])->post($this->apiUrl . '/Init', $data);
             if (!$response->successful()) {
                 //Log::error('Tinkoff API error:', $response->json());
                 throw new \Exception('Tinkoff API error: ' . $response->body());
