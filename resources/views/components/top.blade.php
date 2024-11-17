@@ -323,7 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleIndividualSubmit(e) {
         e.preventDefault();
         const formData = new FormData(this);
-        submitForm('/api/register', formData, this);
+        submitForm('/api/register-individual', formData, this);
+        alert(data.message);
     }
 
     function handleLegalSubmit(e) {
@@ -337,10 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function submitForm(url, formData, form) {
         fetch(url, {
             method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            }
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
