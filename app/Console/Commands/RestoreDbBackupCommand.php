@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Console\Commands;
-
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -12,60 +10,42 @@ class RestoreDbBackupCommand extends Command
 {
     protected $signature = 'db:restore {backupFile?}';
     protected $description = 'Restore the database from a backup file';
-
     public function handle()
     {
         $databaseName = env('DB_DATABASE');
-        $host = env('DB_HOST');
-        $username = env('DB_USERNAME');
-        $password = env('DB_PASSWORD');
+        $dbHost = env('DB_HOST');
+        $dbPort = env('DB_PORT');
+        $dbUsername = env('DB_USERNAME');
+        $dbName = env('DB_DATABASE');
+        $userName = "root";
+        $password = $this->ask('Please enter MySQL Root user password');
         $backupFile = $this->argument('backupFile') ?? $this->chooseBackupFile();
-        $fullPath = storage_path('backups/' . $backupFile);
-
-        if (!File::exists($fullPath)) {
-            $this->error("$backupFile file does not exist in the backups folder.");
+        
+        if (!$backupFile || !File::exists(storage_path('backups/' . $backupFile))) {
+            $this->error("$backupFile file does not exist.");
             return;
         }
-        // Import the backup file with remote credentials
-        $command = sprintf(
-            'mysql -h %s -u %s --password="%s" %s < %s --port 15652',
-            escapeshellarg($host),
-            escapeshellarg($username),
-            escapeshellarg($password),
-            escapeshellarg($databaseName),
-            escapeshellarg($fullPath)
-        );
-        $process = Process::fromShellCommandline($command);
-        $process->setTimeout(3600); // Set timeout to 1 hour
         
-        $this->info('Starting database import...');
-        $process->run(function ($type, $buffer) {
-            $this->output->write('.');
-        });
-
+        $backupFile = storage_path('backups/' . $backupFile);
+        // Drop and recreate the database
+        //DB::statement("DROP DATABASE IF EXISTS {$databaseName}");
+        //DB::statement("CREATE DATABASE {$databaseName}");
+        // Import the backup file
+        $command = "mysql -h {$dbHost} -P {$dbPort} -u {$dbUsername} -p {$dbName} < {$backupFile}";
+        $process = Process::fromShellCommandline($command);
+        $process->setTimeout(7200);
+        $process->run();
         if (!$process->isSuccessful()) {
             throw new ProcessFailedException($process);
         }
-
-        $this->newLine();
         $this->info('Database restored successfully from ' . $backupFile);
     }
-
     protected function chooseBackupFile()
     {
         $files = File::files(storage_path('backups'));
-        $sqlFiles = array_filter($files, function ($file) {
-            return $file->getExtension() === 'sql';
-        });
         $fileNames = array_map(function ($file) {
             return $file->getFilename();
-        }, $sqlFiles);
-
-        if (empty($fileNames)) {
-            $this->error('No .sql files found in the backups folder.');
-            exit(1);
-        }
-
+        }, $files);
         return $this->choice('Select a backup file', $fileNames, 0);
     }
 }
