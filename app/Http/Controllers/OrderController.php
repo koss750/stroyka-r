@@ -116,7 +116,7 @@ class OrderController extends Controller
         $project->price_type = $price_type;
         $project->save();
         //$user->notify(new ReceiptNotification($project, $design, $user->email));
-        $urlcontent = base64_encode(file_get_contents($paymentUrl));
+        $urlcontent = base64_encode($paymentUrl);
         return response()->json([
             'success' => true,
             'paymentUrl' => $paymentUrl,

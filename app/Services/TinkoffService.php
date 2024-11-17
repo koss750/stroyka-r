@@ -27,6 +27,7 @@ class TinkoffService
             'Amount' => $data['Amount'],
             'OrderId' => $data['OrderId'],
             'Description' => $data['Description'],
+            'FailURL' => $data['FailURL'],
         ];
         
         // Sort by key
@@ -37,7 +38,7 @@ class TinkoffService
         foreach ($tokenData as $value) {
             $plainString .= $value;
         }
-        $plainString .= $this->secretKey . $this->terminalKey;
+        $plainString .= $this->secretKey . $data['SuccessURL'] . $this->terminalKey;
         //dd($tokenData, $plainString, hash('sha256', $plainString));
         // Generate SHA-256 hash
         return hash('sha256', $plainString);
@@ -51,8 +52,8 @@ class TinkoffService
             'Amount' => $params['amount'],
             'OrderId' => $params['orderId'],
             'Description' => $params['description'],
-            'SuccessURL' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => $base64ref]),
-            'FailURL' => route('payment.set.status', ['payment_status' => 'error', 'order_id' => $base64ref]),
+            'SuccessURL' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => "$base64ref"]),
+            'FailURL' => route('payment.set.status', ['payment_status' => 'error', 'order_id' => "$base64ref"]),
             'DATA' => [
                 'Email' => $params['email'],
                 'Phone' => $params['phone'],
@@ -82,10 +83,8 @@ class TinkoffService
                 'Content-Type' => 'application/json;charset=UTF-8'
             ])->post($this->apiUrl . '/Init', $data);
             if (!$response->successful()) {
-                //Log::error('Tinkoff API error:', $response->json());
                 throw new \Exception('Tinkoff API error: ' . $response->body());
             }
-
             $responseData = json_decode($response->body(), true) ?? null;
             $url = $responseData['PaymentURL'] ?? null;
             $payment_id = $responseData['PaymentId'] ?? null;

@@ -3,7 +3,7 @@
         <div class="row align-items-center">
             <div id="logoContainer" class="col-4 col-3-sm">
                 <div class="headerLogo">
-                    <a href="../site">
+                    <a href="/">
                         @if (env('TEST_ENVIRONMENT') != 'true')
                             <img src="{{ asset('assets/images/logo5.png') }}" alt="Стройка.com" class="logo-image">
                         @else
