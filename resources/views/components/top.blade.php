@@ -324,7 +324,8 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const formData = new FormData(this);
         submitForm('/api/register-individual', formData, this);
-        alert(data.message);
+        alert ("Для подтверждения регистрации вам будет отправлена письмо с ссылкой на подтверждение.");
+        window.location.href = './site';
     }
 
     function handleLegalSubmit(e) {
