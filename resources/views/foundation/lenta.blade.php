@@ -66,15 +66,18 @@
                     @endif
                 </div>
             @endforeach
+            <div id="formMessage" class="text-danger mb-2" style="display: none;">
+                Для покупки сметы заполните все обязательные поля.
+            </div>
             <button type="button" class="btn btn-primary mt-3" data-toggle="modal" data-target="#exampleModal">Пример сметы</button>
-            <button type="button" class="btn btn-primary mt-3" data-toggle="modal" data-target="#paymentModal">Купить смету</button>
+            <button type="button" class="btn btn-primary mt-3" id="buyEstimateButton" data-toggle="modal" data-target="#paymentModal" disabled>Купить смету</button>
         </form>
     </div>
 </div>
 
-@component('components.payment-modal', ['type' => 'foundation', 'id' => 1, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => 0])
+@component('components.payment-modal', ['type' => 'foundation', 'id' => $foundation->id, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => 0])
 @endcomponent
-@component('components.payment-modal', ['type' => 'foundation', 'id' => $foundation->id, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => 500])
+@component('components.payment-modal', ['type' => 'foundation', 'id' => $foundation->id, 'title' => $foundation->site_title, 'image' => $foundation->image, 'price' => $price])
 @endcomponent
 @endsection
 
@@ -225,6 +228,37 @@
                 position = target.value.length;
             }
             target.selectionEnd = position;
+        });
+
+        // Function to check if all required fields are filled
+        function checkRequiredFields() {
+            let allFilled = true;
+            $('#stripFoundationForm [required]').each(function() {
+                if ($(this).val() === '') {
+                    allFilled = false;
+                    return false; // Break the loop
+                }
+            });
+            return allFilled;
+        }
+
+        // Function to toggle button and message
+        function toggleButtonAndMessage() {
+            if (checkRequiredFields()) {
+                $('#buyEstimateButton').prop('disabled', false);
+                $('#formMessage').hide();
+            } else {
+                $('#buyEstimateButton').prop('disabled', true);
+                $('#formMessage').show();
+            }
+        }
+
+        // Initial check
+        toggleButtonAndMessage();
+
+        // Check on input change
+        $('#stripFoundationForm [required]').on('input', function() {
+            toggleButtonAndMessage();
         });
     });
 </script>

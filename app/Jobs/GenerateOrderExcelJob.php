@@ -59,7 +59,7 @@ class GenerateOrderExcelJob implements ShouldQueue
         $this->rowCounter = 12;
         $this->smetaTotalLabour = 0;
         $this->smetaTotalMaterial = 0;
-        $this->labourIncluded = false;
+        $this->labourIncluded = true;
     }
 
     public function handle()

@@ -9,9 +9,8 @@
 @php
     if ($type === 'foundation') {
         $order_type = 'foundation';
-        if ($id == 1) {
+        if ($price == 0) {
             $example = true;
-            $price = 0;
             $modal_id = "exampleModal";
             $label = "Пример сметы на фундамент";
             $button_label = "Скачать пример сметы";
@@ -40,8 +39,6 @@
             $button_label = "Оплатить";
         }
     }
-    
-    $payment_provider = config('app.payment_provider');
 @endphp
 
 <div id="{{ $modal_id }}" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="paymentModalLabel" aria-hidden="true">
@@ -91,7 +88,7 @@
                             @elseif ($order_type == 'design' && $price == 0)
                                 <input type="hidden" name="price_type" value="smeta_project|{{ $price }}">
                                 <input type="hidden" name="amount" value="{{ $price }}">
-                            @elseif ($order_type == 'foundation' && $price == 0)
+                            @elseif ($order_type == 'foundation')
                                 <input type="hidden" name="price_type" value="foundation|{{ $price }}">
                                 <input type="hidden" name="amount" value="{{ $price }}">
                             @endif
@@ -216,14 +213,14 @@
                     const cellIndex = input.getAttribute('data-excel-cell');
                     let cellValue;
 
-                    if ('{{ $id }}' === '1') {
+                    if ({{ $price }} === 0) {
                         // For example/free orders, use placeholder values
                         cellValue = input.placeholder || '';
                     } else {
                         // For paid orders, use actual input values
                         cellValue = input.value || '';
                     }
-
+                    orderData.foundation_id = '{{ $id }}';
                     orderData.foundation_data[cellIndex] = cellValue;
                 });
             } else {
@@ -234,9 +231,7 @@
             }
 
             // Determine the correct endpoint based on type and provider
-            const endpoint = provider === 'example' 
-                ? ('{{ $type }}' === 'foundation' ? '/process-example-foundation-order' : '/api/tinkoff/init')
-                : '/api/tinkoff/init';
+            const endpoint = '/api/tinkoff/init';
             
             console.log('Submitting order to:', endpoint, orderData);
 

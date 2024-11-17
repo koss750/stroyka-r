@@ -218,7 +218,6 @@ Route::prefix('vora')->group(function () {
 Route::post('/process-project-smeta-order', [OrderController::class, 'processProjectSmetaOrder'])->name('process-project-smeta-order');
 Route::post('/process-example-smeta-order', [OrderController::class, 'processExampleSmetaOrder'])->name('process-example-smeta-order');
 Route::post('/process-foundation-order', [OrderController::class, 'processFoundationOrder'])->name('process-foundation-order');
-Route::post('/process-example-foundation-order', [OrderController::class, 'processExampleFoundationOrder'])->name('process-example-foundation-order');
 Route::post('/process-membership-order', [OrderController::class, 'processMembershipOrder'])->name('process-membership-order');
 
 Route::post('/send-feedback', [FeedbackController::class, 'send'])->name('send.feedback');

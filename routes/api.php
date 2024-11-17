@@ -58,5 +58,5 @@ Route::get('subscriptions/active-for-entity', [SubscriptionController::class, 'g
 Route::post('subscriptions/create-for-entity', [SubscriptionController::class, 'createForEntity']);
 
 // Tinkoff
-Route::post('tinkoff/init', [OrderController::class, 'processProjectSmetaOrder']);
+Route::post('tinkoff/init', [OrderController::class, 'initOrder']);
 Route::post('tinkoff/callback', [OrderController::class, 'tinkoffPayCallback']);

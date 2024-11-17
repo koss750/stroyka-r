@@ -8,6 +8,7 @@ use App\Http\Controllers\RuTranslationController as Translator;
 use App\Http\Controllers\InvoiceController as Invoice;
 use App\Models\FormField;
 use App\Models\Foundation;
+use App\Models\PricePlan;
 //use Illuminate\Support\Facades\Redis;
 
 class UIController extends Controller
@@ -25,6 +26,17 @@ class UIController extends Controller
         return view('vora.ecom.product_list', compact('page_title', 'page_description', 'count', $design));
     }
 
+    public function getFoundationPrice($foundation_title) {
+        $pricePlan = PricePlan::where('id', 7)->firstOrFail();
+        $prices = $pricePlan->parameter_option;
+        foreach ($prices as $price) {
+            if ($price['value'] == $foundation_title) {
+                return $price['price'];
+            }
+        }
+        return 999;
+    }
+
     public function lentaFoundationCalculator()
     {
         $formFields = FormField::where('form_type', 'lenta')->orderBy('order')->get();
@@ -32,7 +44,8 @@ class UIController extends Controller
         $foundation->image = 'https://xn--80ardojfh.com/images/foundation-lenta.jpg';
         $page_title = $foundation->site_title;
         $page_description = 'Рассчитайте стоимость фундамента - ' . $foundation->site_title;
-        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation'));
+        $price = $this->getFoundationPrice($foundation->site_title);
+        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation', 'price'));
     }
 
     public function SRPFoundationCalculator()
@@ -42,7 +55,8 @@ class UIController extends Controller
         $foundation->image = 'https://xn--80ardojfh.com/images/foundation-srp.jpg';
         $page_title = 'Калькулятор свайно ростверкового фундамента с плитой перекрытия';
         $page_description = 'Расчёт свайно-ростверкового фундамента с плитой перекрытия';
-        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation'));
+        $price = $this->getFoundationPrice($foundation->site_title);
+        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation', 'price'));
     }
 
     public function SRFoundationCalculator()
@@ -52,7 +66,8 @@ class UIController extends Controller
         $foundation->image = 'https://xn--80ardojfh.com/images/foundation-sr.jpg';
         $page_title = 'Калькулятор свайно ростверкового фундамента';
         $page_description = 'Расчёт свайно-ростверкового фундамента';
-        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation'));
+        $price = $this->getFoundationPrice($foundation->site_title);
+        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation', 'price'));
     }
 
     public function LPFoundationCalculator()
@@ -62,7 +77,8 @@ class UIController extends Controller
         $foundation->image = 'https://xn--80ardojfh.com/images/foundation-lp.jpg';
         $page_title = 'Калькулятор ленточного фундамента с плитой перекрытия';
         $page_description = 'Рассчитайте стоимость ленточного плитного фундамента';
-        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation'));
+        $price = $this->getFoundationPrice($foundation->site_title);
+        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation', 'price'));
     }
 
     public function MPFoundationCalculator()
@@ -72,7 +88,8 @@ class UIController extends Controller
         $foundation->image = 'https://xn--80ardojfh.com/images/foundation-mp.jpg';
         $page_title = 'Калькулятор фундамента монолитная плита';
         $page_description = 'Калькулятор фундамента монолитная плита';
-        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation'));
+        $price = $this->getFoundationPrice($foundation->site_title);
+        return view('foundation.lenta', compact('formFields', 'page_title', 'page_description', 'foundation', 'price'));
     }
 	
     // Dashboard

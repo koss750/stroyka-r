@@ -16,34 +16,99 @@ use App\Notifications\ReceiptNotification;
 use App\Http\Controllers\SubscriptionController;
 use App\Services\TinkoffService;
 use Illuminate\Support\Facades\Log;
+use App\Models\Foundation;
+use App\Jobs\FoundationOrderFileJob;
+use App\Jobs\GenerateOrderExcelJob;
 
 class OrderController extends Controller
 {
+
     public function processFoundationOrder(Request $request)
     {
-        return true;
-        // First, generate the Excel file
-        $templateController = new TemplateController();
-        $excelResponse = $templateController->generateExcel($request);
-
-        // Check if there was an error generating the Excel file
-        if ($excelResponse->status() !== 200) {
-            return $excelResponse;
+        //assign or create user
+        if (Auth::check() && $request->input('logged_in')) {
+            $user = Auth::user();
+        } elseif ($request->input('user_id')) {
+            $user = User::find($request->input('user_id'));
+        } elseif (!$request->input('logged_in')) {
+            $registerController = new RegisterController();
+            $user = $registerController->create($request, true);
+            $request->merge(['user_id' => $user->id]);
+        } else {
+            return response()->json(['error' => 'Logged in user check failed'], 401);
         }
 
-        $excelData = json_decode($excelResponse->getContent(), true);
-        $excelUrl = $excelData['download_url'];
+        $foundationId = $request->input('foundation_id');
+        $cellMappings = $request->input('foundation_data');
 
-        // Load the generated Excel file
-        $spreadsheet = IOFactory::load(storage_path('app/public/' . basename($excelUrl)));
+        
+        $foundation = Foundation::findOrFail($foundationId);
 
-        // Generate the foundation smeta
-        $smetaUrl = $templateController->generateFoundationSmeta($spreadsheet);
+        $orderType = 'foundation';
+        $projectController = new ProjectController();
+        $human_ref = $projectController->generateHumanReference($foundation->id, $orderType);
+        $payment_amount = $request->input('payment_amount');
+        $payment_reference = (string)(random_int(1000000000, 9999999999));
+        
+        if ($request->input('payment_amount') > 0) {
+            
+            if (env('PAYMENT_PROVIDER') === 'TEST-POS') {
+                $result = [
+                    'paymentUrl' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => base64_encode($human_ref)]),
+                    'payment_id' => $payment_reference
+                ];
+            } else {
+                try {
+                    $tinkoff = app(TinkoffService::class);
+                    //dd($request->all());
+                    $result = $tinkoff->initPayment([
+                        'amount' => $request->input('payment_amount')*100,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'orderId' => $human_ref,
+                        'description' => "Смета на фундамент " . $foundation->site_title,
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Tinkoff payment error: ' . $e->getMessage());
+                    return response()->json(['error' => 'Payment system error'], 500);
+                }
+            }
+        } else {
+            $result = [
+                'paymentUrl' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => base64_encode($human_ref)]),
+                'payment_id' => $payment_reference
+            ];
+        }
 
-        // Return both URLs
+        // Create a new project for the foundation order
+        $project = Project::create([
+            'user_id' => $user->id,
+            'human_ref' => $human_ref,
+            'order_type' => $orderType,
+            'ip_address' => $request->ip(),
+            'is_example' => $payment_amount == 0,
+            'payment_reference' => $payment_reference,
+            'payment_amount' => $payment_amount,
+            'foundation_id' => $foundation->id,
+            'selected_configuration' => $cellMappings,
+        ]);
+
+        // Dispatch the job to generate the foundation order file
+        FoundationOrderFileJob::dispatch($project);
+        GenerateOrderExcelJob::dispatch($project->id);
+
+        $description = $foundation->site_title;
+        $paymentUrl = $result['paymentUrl'];
+        $project->payment_provider = env('PAYMENT_PROVIDER');
+        $project->payment_link = $paymentUrl;
+        $project->payment_reference = $payment_reference;
+        $project->payment_status = 'pending';
+        $project->price_type = 'foundation_example_labour';
+        $project->save();
+        //$user->notify(new ReceiptNotification($project, $design, $user->email));
         return response()->json([
-            'excel_url' => $excelUrl,
-            'smeta_url' => $smetaUrl
+            'success' => true,
+            'paymentUrl' => $paymentUrl
         ]);
     }
 
@@ -51,7 +116,6 @@ class OrderController extends Controller
     {
 
         //assign or create user
-
         if (Auth::check() && $request->input('logged_in')) {
             $user = Auth::user();
         } elseif ($request->input('user_id')) {
@@ -65,7 +129,12 @@ class OrderController extends Controller
         }
         $price_type = $request->input('price_type');
         $payment_reference = (string)(random_int(1000000000, 9999999999));
-        $price_type_label = $price_type === 'material' ? 'Только материалы' : ($price_type === 'total' ? 'Материалы и работы' : 'Материалы, работы и доставка');
+        if (strpos($price_type, 'labour') !== false) {
+            $price_type_label = 'Материалы и работы';
+        } else {
+            $price_type_label = 'Только материалы';
+        }
+        $request->merge(['price_type_label' => $price_type_label]);
         //assign design
         $design = Design::find($request->input('design_id'));
         $designTitle = $design->title;
@@ -300,25 +369,12 @@ class OrderController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function initOrder(Request $request, $provider = 'default')
+    public function initOrder(Request $request)
     {
-        if ($provider === 'default') {
-            $provider = env('PAYMENT_PROVIDER');
-        } elseif ($provider === 'free') {
-            return true;
-        }
-        $response = $this->processProjectSmetaOrder($request);
-        switch ($provider) {
-            case 'TINKOFF-SB':
-                try {
-                    return $this->initTinkoffPayment($request);
-                } catch (\Exception $e) {
-                    Log::error('Tinkoff payment error: ' . $e->getMessage());
-                        return response()->json(['error' => 'Payment system error'], 500);
-                    }
-                    break;
-                default:
-                    return response()->json(['error' => 'Invalid payment provider'], 400);
+        if ($request->input('order_type') == 'foundation') {
+            return $this->processFoundationOrder($request);
+        } else {
+            return $this->processProjectSmetaOrder($request);
         }
     }
 

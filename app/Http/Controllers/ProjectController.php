@@ -89,7 +89,7 @@ class ProjectController extends Controller
         $project = Project::create([
             'user_id' => $request->input('user_id'),
             'human_ref' => $this->generateHumanReference($designId, $orderType),
-            'order_type' => $orderType,
+            'order_type' => $request->input('order_type_label'),
             'ip_address' => $ipAddress,
             'payment_reference' => 'test',
             'payment_amount' => $paymentAmount,

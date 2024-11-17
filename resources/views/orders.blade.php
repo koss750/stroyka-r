@@ -126,7 +126,7 @@ $colour_class = "";
 									</td>
                                     @endif
 									<td class="py-2 text-center vertical-align-middle">
-                                        @if($project['filepath'] && ( $project['payment_status'] == 'success' && !$project['is_example'] ))
+                                        @if($project['filepath'] && ( $project['payment_status'] == 'success' && !$project['is_example'] && $project['payment_amount'] > 0 ))
 										<div>{{ $project['payment_amount'] }} руб.</div>
 										<a href="{{ route('general.receipt', $project['payment_reference']) }}" class="receipt-link">
 											<i class="fas fa-receipt fa-lg"></i>

@@ -603,11 +603,11 @@ private function getPriceFromDb($id, $invoice_type_id)
 
         $price_type = $project->price_type;
         $price_type_string = "";
-        if ($price_type == 'material') {
+        if (strpos($price_type, 'labour') !== false) {
+            $price_type_string = "Материалы и работы";
+        } else {
             $price_type_string = "Только материалы";
-        } elseif ($price_type == 'total') {
-            $price_type_string = "Материалы + работы";
-        } else $price_type_string = "";
+        }
 
         $configuration_string = $configuration_string . " (" . $price_type_string . ")";
         
