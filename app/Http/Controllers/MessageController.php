@@ -151,7 +151,7 @@ class MessageController extends Controller
             $attachments = $message->attachments->map(function ($attachment) {
                 return [
                     'filename' => $attachment->filename,
-                    'url' => Storage::url($attachment->path),
+                    'url' => 'storage/message_attachments/' . pathinfo($attachment->path)['basename'],
                     'mime_type' => $attachment->mime_type,
                     'size' => $attachment->size,
                 ];
@@ -206,12 +206,13 @@ class MessageController extends Controller
 
         if ($request->hasFile('attachment')) {
             $file = $request->file('attachment');
-            $path = $file->store('message_attachments');
+            $path = $file->store('message_attachments', 'public');
+            $publicPath = public_path($path);
             
             MessageAttachment::create([
                 'message_id' => $message->id,
                 'filename' => $file->getClientOriginalName(),
-                'path' => $path,
+                'path' => $publicPath,
                 'mime_type' => $file->getMimeType(),
                 'size' => $file->getSize(),
             ]);

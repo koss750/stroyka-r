@@ -494,7 +494,7 @@ $(document).ready(function() {
                         <li class="nav-item">
                             <a class="nav-link active" data-bs-toggle="tab" href="#AllMessage" role="tab">Все сообщения</a>
                         </li>
-                        <li class="nav-item">
+                        <li class="nav-item" hidden>
                             <a class="nav-link" data-bs-toggle="tab" href="#Unread" role="tab">
                                 Непрочитанные <span id="unread-count" class="badge bg-danger">{{ $unreadThreads }}</span>
                             </a>
