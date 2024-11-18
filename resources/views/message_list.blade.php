@@ -3,6 +3,7 @@
 @section('canonical', '')
 
 @section('additional_head')
+<title>Мои переписки</title>
 @endsection
 
 @section('content')
@@ -14,8 +15,11 @@ $(document).ready(function() {
     const existingConversations = new Set();
     // Populate existing conversations in the recipient select
     @foreach($messages as $userId => $conversation)
-        existingConversations.add({{ $userId }});
-        $('#recipient').append(`<option value="{{ $userId }}">{{ $conversation['user']->name }}</option>`);
+        let userId = {{ $userId }};
+        existingConversations.add(userId);
+        if (userId != 7) {
+            $('#recipient').append(`<option value="${userId}">${conversation['user'].name}</option>`);
+        }
     @endforeach
 
     $(document).on('click', '.message-row', function(e) {
@@ -349,7 +353,7 @@ $(document).ready(function() {
     }
 
     // Check for new messages every 5 seconds
-    setInterval(checkNewMessages, 5000);
+    setInterval(checkNewMessages, 20000);
 
     // Add this new function for message searching
     function searchMessages() {
@@ -436,7 +440,7 @@ $(document).ready(function() {
     }
 
     // Call this function periodically or after certain actions
-    setInterval(updateUnreadCount, 30000); // Update every 30 seconds
+    //setInterval(updateUnreadCount, 30000); // Update every 30 seconds
 
     $('#attach-file').on('click', function(e) {
         e.preventDefault();
@@ -614,7 +618,7 @@ $(document).ready(function() {
                         <label for="recipient" class="form-label">Кому:</label>
                         <select class="form-select" id="recipient" required>
                             <option value="">Выберите получателя...</option>
-                            <option value="500">Служба поддержки</option>
+                            <option value="7">Поддержка портала</option>
                             <!-- Other recipients will be populated by JavaScript -->
                         </select>
                     </div>
@@ -624,7 +628,7 @@ $(document).ready(function() {
                     </div>
                     <div class="mb-3">
                         <label for="messageBody" class="form-label">Сообщение:</label>
-                        <textarea class="form-control" id="messageBody" rows="5" required></textarea>
+                        <textarea class="form-control no-text-transform" id="messageBody" rows="5" required></textarea>
                     </div>
                 </form>
             </div>

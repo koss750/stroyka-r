@@ -30,7 +30,6 @@ class FeedbackMail extends Notification
 
     public function toMail($notifiable)
     {
-
         return (new MailMessage)
             ->subject('Запрос с сайта')
             ->line('Имя: ' . $this->name)

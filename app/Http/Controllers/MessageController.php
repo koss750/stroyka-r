@@ -14,7 +14,7 @@ use App\Models\MessageAttachment;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Supplier;
 use Illuminate\Support\Facades\Cache;
-
+use App\Notifications\FeedbackMail;
 class MessageController extends Controller
 {
     public function getUnreadCount()
@@ -228,11 +228,23 @@ class MessageController extends Controller
             'content' => 'required|string'
         ]);
 
+        if ($request->receiver_id == 7) {
+            $user = User::find(7);
+            $sender = User::find(Auth::id());
+            $user->notify(new FeedbackMail(
+                $sender->name,
+                $sender->email,
+                $request->content
+            ));
+        }
+
         $message = Message::create([
             'sender_id' => Auth::id(),
             'receiver_id' => $request->receiver_id,
             'content' => $request->content
         ]);
+
+        
 
         return response()->json($message);
     }
@@ -248,7 +260,7 @@ class MessageController extends Controller
     public function createProjectMessage(Project $project, User $receiver, string $content)
     {
         return Message::create([
-            'sender_id' => User::where('id', 500)->firstOrFail()->id, // Assuming 500 is the system user ID
+            'sender_id' => User::where('id', 7)->firstOrFail()->id, // Assuming 500 is the system user ID
             'receiver_id' => $receiver->id,
             'content' => $content,
             'project_id' => $project->id,

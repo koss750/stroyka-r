@@ -328,7 +328,6 @@ Route::get('/increment-redis-counter', function (Request $request) {
 });
 
 Route::get('/messages/{userId}/new', [MessageController::class, 'getNewMessages']);
-Route::post('/messages', [MessageController::class, 'store']);
 Route::get('/messages/{userId}', [MessageController::class, 'getConversation']);
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 Route::get('/view-profile/{id}', [SupplierController::class, 'viewProfile'])->name('supplier.profile');
