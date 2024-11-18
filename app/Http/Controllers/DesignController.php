@@ -390,7 +390,11 @@ $html .= '<thead class="thead-dark">';
     
                 $designs = $designs->concat($categoryDesigns);
             }
-    
+            foreach ($designs as $design) {
+                if ($design->hide) {
+                    $designs->forget($design);
+                }
+            }
             return $designs->flatten();
         });
 
@@ -431,6 +435,11 @@ $html .= '<thead class="thead-dark">';
     $design->etiketka = number_format($design->etiketka, 2, '.', ' ');
     $design->reviewCount = 10;
     $design = $this->transformDesign($design);
+    if ($design->price == 99999) {
+        $design->hide = true;
+    } else {
+        $design->hide = false;
+    }
     $data = InvoiceType::all();
 
     $user = Auth::user();
