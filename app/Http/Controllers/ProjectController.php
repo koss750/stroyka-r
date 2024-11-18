@@ -84,12 +84,12 @@ class ProjectController extends Controller
         if ($selectedOptions->foundation == 220) unset($selectedOptions->foundation);
         $configurationDescriptions = json_decode($request->input('configuration_descriptions'));
         $paymentAmount = $request->input('payment_amount');
-        $orderType = $request->input('order_type') ?? 'unknown';
+        $orderType = $request->input('order_type_label') ?? ($request->input('order_type') ?? 'unknown');
         $ipAddress = $request->ip();
         $project = Project::create([
             'user_id' => $request->input('user_id'),
             'human_ref' => $this->generateHumanReference($designId, $orderType),
-            'order_type' => $request->input('order_type_label'),
+            'order_type' => $orderType,
             'ip_address' => $ipAddress,
             'payment_reference' => 'test',
             'payment_amount' => $paymentAmount,
@@ -222,10 +222,10 @@ class ProjectController extends Controller
         $designTitle = Design::where('id', $project->design_id)->firstOrFail()->title;
         $selectedConfiguration = $project->selected_configuration;
         $priceSetting = $project->price_type;
-        if ($priceSetting == 'material') {
-            $displayLabour = false;
-        } else {
+        if ($priceSetting == 'smeta_project_labour' || str_contains($priceSetting, 'foundation')) {
             $displayLabour = true;
+        } else {
+            $displayLabour = false;
         }
         $invoiceTypeIds = [];
 

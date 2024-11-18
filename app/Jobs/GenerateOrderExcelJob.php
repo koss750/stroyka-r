@@ -59,7 +59,7 @@ class GenerateOrderExcelJob implements ShouldQueue
         $this->rowCounter = 12;
         $this->smetaTotalLabour = 0;
         $this->smetaTotalMaterial = 0;
-        $this->labourIncluded = true;
+        $this->labourIncluded = false;
     }
 
     public function handle()
@@ -68,7 +68,7 @@ class GenerateOrderExcelJob implements ShouldQueue
         
         $project = Project::findOrFail($this->projectId);
 
-        $this->labourIncluded = $project->price_type === 'total' || $project->price_type === 'total_plus_shipping';
+        $this->labourIncluded = ($project->price_type === 'smeta_project_labour' || str_contains($project->price_type, 'foundation'));
         //dd($this->labourIncluded, $project->price_type);
 
         $spreadsheet = IOFactory::createReader('Xlsx')->load(storage_path('templates/empty.xlsx'));
