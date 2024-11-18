@@ -117,7 +117,7 @@ document.addEventListener('click', function(event) {
 });
 
 function confirmSubmission() {
-    return confirm('Отправить запрос?');
+    return confirm('Ваше сообщение будет просмотрено администратором сайта в ближайшее время.');
 }
 
 function updateCounter(textarea) {
