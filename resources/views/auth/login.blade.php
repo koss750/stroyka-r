@@ -14,6 +14,13 @@
                     <h2 class="text-center mb-4">{{ __('Вход') }}</h2>
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
+                        
+                        @if (request('marker') === 'email_verified')
+                            <div class="alert alert-success" role="alert">
+                                {{ __('Ваш email подтвержден. Теперь вы можете войти.') }}
+                            </div>
+                        @endif
+                        
                         <div class="mb-3">
                             <label for="email" class="form-label">{{ __('Email') }}</label>
                             <input id="email" type="email" class="form-control no-text-transform @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>

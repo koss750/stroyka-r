@@ -43,13 +43,13 @@ class VerificationController extends Controller
         }
 
         if ($user->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Email already verified'], 200);
+            redirect()->route('login', ['marker' => 'email_verified']);
         }
 
         if ($user->markEmailAsVerified()) {
             event(new Verified($user));
         }
 
-        return response()->json(['message' => 'Email verified successfully'], 200);
+        return redirect()->route('login', ['marker' => 'email_verified']);
     }
 }

@@ -631,6 +631,7 @@ private function getPriceFromDb($id, $invoice_type_id)
             'configuration' => $configuration_string,
             'payment_amount' => $project->payment_amount,
             'payment_status' => $project->payment_status,
+            'order_type' => $project->order_type,
             'payment_reference' => $project->payment_reference,
             'payment_link' => $project->payment_link,
             'filepath' => $project->filepath,

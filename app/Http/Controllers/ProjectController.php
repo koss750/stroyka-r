@@ -99,7 +99,7 @@ class ProjectController extends Controller
             'configuration_descriptions' => $configurationDescriptions,
         ]);
 
-        dispatch(new GenerateOrderExcelJob($project->id));
+        dispatch(new GenerateOrderExcelJob($project->id))->onConnection('sync');
 
         return $project->id;
     }

@@ -98,14 +98,14 @@ class GenerateOrderExcelJob implements ShouldQueue
             $foundationTime = microtime(true);
             
             $foundation = Foundation::findOrFail($project->foundation_id);
-            dispatch(new FoundationOrderFileJob($project));
-            sleep(4);
+            
             if (!$foundation) {
                 Log::error("Foundation not found for project ID: {$this->projectId}");
                 return;
             }
 
             if (!$project->foundation_params) {
+                dd($project);
                 Log::error("Foundation params not found for project ID: {$this->projectId}");
                 return;
             }

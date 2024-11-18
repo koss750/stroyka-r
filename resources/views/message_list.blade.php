@@ -15,7 +15,7 @@ $(document).ready(function() {
     const existingConversations = new Set();
     // Populate existing conversations in the recipient select
     @foreach($messages as $userId => $conversation)
-        let userId = {{ $userId }};
+        userId = {{ $userId }};
         existingConversations.add(userId);
         if (userId != 7) {
             $('#recipient').append(`<option value="${userId}">${conversation['user'].name}</option>`);
@@ -24,7 +24,7 @@ $(document).ready(function() {
 
     $(document).on('click', '.message-row', function(e) {
         e.preventDefault();
-        const userId = $(this).data('user-id');
+        let userId = $(this).data('user-id');
         if (!userId) {
             console.error('Invalid user ID');
             return;
@@ -59,15 +59,18 @@ $(document).ready(function() {
                 return;
             }
 
-            const lastSeen = data.otherUser.last_seen || 'Unknown';
+            let lastSeen = data.otherUser.last_seen || 'Unknown';
             const isOnline = lastSeen === 'Online';
+            if (userId == 7) {
+                lastSeen = 'Файлы и длинные сообщения присылайте на <a href="mailto:info@стройка.com">info@стройка.com</a>';
+            }
             $('#chat-header').html(`
                 <div class="d-flex align-items-center">
                     <img src="${data.otherUser.avatar || '/default-avatar.png'}" alt="" class="rounded-circle" width="40">
                     <div class="ms-3">
                         <h5 class="mb-0 font-w600 d-flex align-items-center">
                             ${data.otherUser.name || 'Unknown User'}
-                            ${userId == 500 ? '<i class="fas fa-headset ms-1 text-primary" title="Тех поддержка"></i>' : ''}
+                            ${userId == 7 ? '<i class="fas fa-headset ms-1 text-primary" title="Тех поддержка"></i>' : ''}
                             ${isOnline ? '<span class="online-indicator ms-2"></span>' : ''}
                         </h5>
                         <small class="text-muted">${lastSeen}</small>
@@ -522,16 +525,15 @@ $(document).ready(function() {
                                                     @if($userId == 500)
                                                         <i class="fas fa-headset ms-1 text-primary" title="Тех поддержка"></i>
                                                     @endif
-                                                    
                                                 </h6>
                                             </div>
                                             <small class="text-muted">{{ $conversation['created_at']->diffForHumans() }}</small>
                                         </div>
                                         <p class="mb-1">{{ Str::limit($conversation['last_message'], 50) }}</p>
-                                        @if($conversation['user']->last_seen === 'Online')
-                                                        <span class="online-indicator ms-2"></span>
-                                                    @endif<small class="text-muted">{{ $conversation['user']->last_seen }}</small> 
-                                        
+                                        @if($conversation['user']->last_seen === 'Online' && $userId != 7)
+                                            <span class="online-indicator ms-2"></span>
+                                            <small class="text-muted">{{ $conversation['user']->last_seen }}</small>
+                                        @endif
                                     </div>
                                 @empty
                                     <div class="text-center py-5">
@@ -624,7 +626,7 @@ $(document).ready(function() {
                     </div>
                     <div class="mb-3">
                         <label for="subject" class="form-label">Тема:</label>
-                        <input type="text" class="form-control" id="subject">
+                        <input type="text" class="form-control no-text-transform" id="subject">
                     </div>
                     <div class="mb-3">
                         <label for="messageBody" class="form-label">Сообщение:</label>

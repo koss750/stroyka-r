@@ -109,9 +109,11 @@ $colour_class = "";
 												<a class="dropdown-item" href="{{ $project['filepath'] }}" download>
 													<i class="fas fa-file-excel fa-lg" style="color: #217346;"></i> Скачать xlsx
 												</a>
+                                                @if($project['order_type'] != 'foundation')
 												<a class="dropdown-item" href="{{ route('orders.view', $project['id']) }}" target="_blank">
 													<i class="fas fa-eye fa-lg" style="color: #17a2b8;"></i> Смотреть
 												</a>
+                                                @endif
 											</div>
 										@elseif($project['payment_link'] && $project['payment_status'] != 'success' && !$project['is_example'])
                                         <a href="{{ $project['payment_link'] }}" class="btn btn-sm btn-success">Оплатить</a>

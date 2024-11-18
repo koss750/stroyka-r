@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const formData = new FormData(this);
         submitForm('/api/register-individual', formData, this);
-        alert ("Для подтверждения регистрации вам будет отправлена письмо с ссылкой на подтверждение.");
+        alert ("Для подтверждения регистрации вам будет отправлена письмо с ссылкой на подтверждение. Не забудьте проверить папку \"Спам\".");
         window.location.href = '/site';
     }
 

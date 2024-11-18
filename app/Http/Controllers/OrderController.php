@@ -94,8 +94,8 @@ class OrderController extends Controller
         ]);
 
         // Dispatch the job to generate the foundation order file
-        FoundationOrderFileJob::dispatch($project);
-        GenerateOrderExcelJob::dispatch($project->id);
+        FoundationOrderFileJob::dispatch($project)->onConnection('sync');
+        GenerateOrderExcelJob::dispatch($project->id)->onConnection('sync');
 
         $description = $foundation->site_title;
         $paymentUrl = $result['paymentUrl'];
@@ -184,7 +184,7 @@ class OrderController extends Controller
         $project->payment_status = 'pending';
         $project->price_type = $price_type;
         $project->save();
-        //$user->notify(new ReceiptNotification($project, $design, $user->email));
+        
         $urlcontent = base64_encode($paymentUrl);
         return response()->json([
             'success' => true,
@@ -465,6 +465,10 @@ class OrderController extends Controller
     {
         $project = Project::where('human_ref', base64_decode($order_id))->firstOrFail();
         $project->payment_status = $payment_status;
+        if ($payment_status == 'success') {
+            //$user = User::find($project->user_id);
+            //$user->notify(new ReceiptNotification($project, $design, $user->email));
+        }
         $project->is_example ? $project->payment_status = 'error' : $project->payment_status = $payment_status;
         $project->save();
         return redirect()->route('payment.status', ['payment_status' => $payment_status, 'order_id' => $order_id]);

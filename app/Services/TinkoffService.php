@@ -47,9 +47,12 @@ class TinkoffService
     public function initPayment(array $params)
     {
         $base64ref = base64_encode($params['orderId']);
+        //get device from user agent
+        $device = strpos($_SERVER['HTTP_USER_AGENT'], 'Mobile') !== false ? 'Mobile' : 'Desktop';
+        $amount = $params['amount'];
         $data = [
             'TerminalKey' => $this->terminalKey,
-            'Amount' => $params['amount'],
+            'Amount' => $amount,
             'OrderId' => $params['orderId'],
             'Description' => $params['description'],
             'SuccessURL' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => "$base64ref"]),
@@ -57,8 +60,9 @@ class TinkoffService
             'DATA' => [
                 'Email' => $params['email'],
                 'Phone' => $params['phone'],
-                "TinkoffPayWeb" => "true",
-                "Device" => "Desktop",
+                "TinkoffPayWeb" => "false",
+                "SberPayWeb" => "false",
+                "Device" => $device,
             ],
             'Receipt' => [
                 'Email' => $params['email'],
@@ -67,9 +71,9 @@ class TinkoffService
                 'Items' => [
                     [
                         "Name" => $params['description'],
-                        "Price" => $params['amount'],
+                        "Price" => $amount,
                         "Quantity" => 1,
-                        "Amount" => $params['amount'],
+                        "Amount" => $amount,
                         "Tax" => "vat10"
                     ]
                 ]
