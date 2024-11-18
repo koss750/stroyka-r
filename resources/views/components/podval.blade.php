@@ -6,7 +6,7 @@
             </div>
             <div class="col-sm-8">
                 <ul>
-                    <li><a href="{{ route('terms.and.conditions') }}">Политика конфиденциальности</a></li>    
+                    <li><a href="{{ route('confidentiality') }}">Политика конфиденциальности</a></li>    
                     <li style="margin-right: 7%;"><a href="{{ route('blog.index') }}">Блог</a></li>
                     <li><a href="{{ route('terms.and.conditions') }}">Условия использования</a></li>
                 </ul>
