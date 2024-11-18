@@ -341,6 +341,10 @@ Route::get('/terms-and-conditions', function () {
     return view('statics.terms');
 })->name('terms.and.conditions');
 
+Route::get('/confidentiality', function () {
+    return view('statics.confidentiality');
+})->name('confidentiality');
+
 //blogs
 Route::get('/blog', [BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
