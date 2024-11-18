@@ -60,7 +60,12 @@
             </div>
             <div class="form-group">
                 <label for="login-password">Пароль</label>
-                <input type="password" class="form-control" id="login-password" name="password" required>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="login-password" name="password" required>
+                    <span class="input-group-text toggle-password" data-target="#login-password">
+                        <i class="fas fa-eye"></i>
+                    </span>
+                </div>
             </div>
             <div class="form-group form-check">
                 <input type="checkbox" class="form-check-input custom-checkbox" id="remember-me" name="remember">
@@ -101,9 +106,11 @@
                         <label for="individual-email">E-mail</label>
                         <input type="email" class="form-control no-text-transform" id="individual-email" name="email" required>
                     </div>
-                    <div class="form-group">
-                        <label for="individual-password">Пароль</label>
+                    <div class="input-group">
                         <input type="password" class="form-control" id="individual-password" name="password" required>
+                        <span class="input-group-text toggle-password" data-target="#individual-password">
+                            <i class="fas fa-eye"></i>
+                        </span>
                     </div>
                     <div class="form-group">
                         <label for="individual-password-confirmation">Подтвердите пароль</label>
@@ -174,6 +181,25 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastCheckedInn = '';
     let isCompanyActive = false;
     let companyFormData = null;
+
+    const togglePasswordButtons = document.querySelectorAll('.toggle-password');
+
+    togglePasswordButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetInput = document.querySelector(this.getAttribute('data-target'));
+            const icon = this.querySelector('i');
+
+            if (targetInput.type === 'password') {
+                targetInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                targetInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
 
     // Event listeners
     if (signupBtn) {
@@ -325,7 +351,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(this);
         submitForm('/api/register-individual', formData, this);
         alert ("Для подтверждения регистрации вам будет отправлена письмо с ссылкой на подтверждение.");
-        window.location.href = './site';
+        window.location.href = '/site';
     }
 
     function handleLegalSubmit(e) {
@@ -617,5 +643,13 @@ document.addEventListener('DOMContentLoaded', function() {
         border: 1px solid #ff6b6b;
         border-radius: 5px;
         padding: 5px;
+    }
+    .input-group-text {
+        cursor: pointer;
+        margin-bottom: 25px;
+    }
+
+    .input-group-text i {
+        font-size: 1.2em;
     }
 </style>

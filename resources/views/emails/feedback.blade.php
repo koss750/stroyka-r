@@ -1,5 +1,5 @@
 <!-- resources/views/emails/feedback.blade.php -->
-
-Имя: {{ $name }}
-Email: {{ $email }}
-Сообщение: {{ $message }}
+<h1>Обратная связь</h1>
+<p>Имя: {{ $name }}</p>
+<p>Email: {{ $email }}</p>
+<p>Сообщение: {{ $message }}</p>

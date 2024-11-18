@@ -67,11 +67,21 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="password">Создайте пароль:</label>
-                                    <input type="password" id="password" name="password" class="form-control" required>
+                                    <div class="input-group">
+                                        <input type="password" id="password" name="password" class="form-control" required>
+                                        <span class="input-group-text toggle-password" data-target="#password">
+                                            <i class="fas fa-eye"></i>
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="form-group">
                                     <label for="confirm_password">Повторите пароль:</label>
-                                    <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                                    <div class="input-group">
+                                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+                                        <span class="input-group-text toggle-password" data-target="#confirm_password">
+                                            <i class="fas fa-eye"></i>
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -646,6 +656,7 @@ function onYaPayLoad() {
     .suggestion-item:hover {
         background-color: #f0f0f0;
     }
+   
 </style>
 
 

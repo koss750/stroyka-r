@@ -25,7 +25,12 @@
                         </div>
                         <div class="mb-3">
                             <label for="password" class="form-label">{{ __('Пароль') }}</label>
-                            <input id="password" type="password" class="form-control no-text-transform @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+                            <div class="input-group">
+                                <input id="password" type="password" class="form-control no-text-transform @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
+                                <span class="input-group-text toggle-password" data-target="#password">
+                                    <i class="fas fa-eye"></i>
+                                </span>
+                            </div>
                             @error('password')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>
