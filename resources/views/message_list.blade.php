@@ -18,7 +18,7 @@ $(document).ready(function() {
         userId = {{ $userId }};
         existingConversations.add(userId);
         if (userId != 7) {
-            $('#recipient').append(`<option value="${userId}">${conversation['user'].name}</option>`);
+            $('#recipient').append(`<option value="${userId}">${{!! json_encode($conversation['user']->name) !!}}</option>`);
         }
     @endforeach
 
@@ -522,7 +522,7 @@ $(document).ready(function() {
                                                 @endif
                                                 <h6 class="mb-1 d-flex align-items-center">
                                                     {{ $conversation['user']->name }}
-                                                    @if($userId == 500)
+                                                    @if($userId == 7)
                                                         <i class="fas fa-headset ms-1 text-primary" title="Тех поддержка"></i>
                                                     @endif
                                                 </h6>
@@ -551,7 +551,7 @@ $(document).ready(function() {
                                                 <span class="unread-dot me-2"></span>
                                                 <h6 class="mb-1">
                                                     {{ $conversation['user']->name }}
-                                                    @if($userId == 500)
+                                                    @if($userId == 7)
                                                         <i class="fas fa-headset ms-1 text-primary" title="Тех поддержка"></i>
                                                     @endif
                                                 </h6>
@@ -591,7 +591,7 @@ $(document).ready(function() {
                         @csrf
                         <div class="input-group">
                             <textarea class="form-control" id="message-input" placeholder="Напишите сообщение..." disabled></textarea>
-                            <input type="file" id="attachment" name="attachment" accept=".xls,.xlsx,.pdf" style="display: none;">
+                            <input type="file" id="attachment" name="attachment" accept=".xls,.xlsx,.pdf,.jpg,.jpeg,.png" style="display: none;">
                             <div class="input-group-append">
                                 <button type="button" class="btn btn-secondary" id="attach-file" disabled>
                                     <i class="fas fa-paperclip"></i>

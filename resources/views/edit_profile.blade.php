@@ -22,9 +22,9 @@
                         </div>
                     @endif
 
-                    <form action="{{ route('user.updateSettings') }}" method="POST">
+                    <form action="{{ route('user.update') }}" method="POST">
                         @csrf
-                        @method('PUT')
+                        @method('POST')
 
                         <div class="mb-3">
                             <label for="name" class="form-label">Имя</label>
@@ -46,7 +46,7 @@
                                 <label for="region_id" class="form-label">Основной регион</label>
                                 <select class="form-select" id="region_id" name="region_id" required>
                                     @foreach($regions as $region)
-                                        <option value="{{ $region->id }}" {{ old('region_id', $user->region_id) == $region->id ? 'selected' : '' }}>
+                                        <option value="{{ $region->id }}" {{ old('region_id', $user->regions) == $region->id ? 'selected' : '' }}>
                                             {{ $region->name }}
                                         </option>
                                     @endforeach
@@ -56,7 +56,7 @@
 
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" checked type="checkbox" id="email_notifications" name="email_notifications" >
+                                <input class="form-check-input" id="email_notifications" type="checkbox" name="email_notifications" {{ $user->email_notifications ? 'checked' : '' }}>
                                 <label class="form-check-label" for="email_notifications">
                                     Получать уведомления по email
                                 </label>
@@ -65,7 +65,7 @@
 
                         <div class="mb-3">
                             <div class="form-check">
-                                <input class="form-check-input" checked type="checkbox" id="sms_notifications" name="sms_notifications">
+                                <input class="form-check-input" id="sms_notifications" type="checkbox" name="sms_notifications" {{ $user->sms_notifications ? 'checked' : '' }}>
                                 <label class="form-check-label" for="sms_notifications">
                                     Получать SMS-уведомления
                                 </label>

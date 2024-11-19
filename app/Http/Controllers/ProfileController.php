@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Region;
-
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -20,7 +20,7 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => User::find(auth()->user()->id),
         ]);
     }
 
@@ -77,18 +77,18 @@ class ProfileController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'region_id' => 'required|exists:regions,id',
-            'email_notifications' => 'boolean',
-            'sms_notifications' => 'boolean',
+            'email' => 'required|string|email|max:255',
+            'region_id' => 'required',
+            'email_notifications' => 'nullable',
+            'sms_notifications' => 'nullable',
             'password' => 'nullable|string|min:8|confirmed',
         ]);
 
         $user->name = $request->name;
         $user->email = $request->email;
-        $user->region_id = $request->region_id;
-        $user->email_notifications = $request->has('email_notifications');
-        $user->sms_notifications = $request->has('sms_notifications');
+        $user->regions = $request->region_id;
+        $user->email_notifications = $request->has('email_notifications') ? 1 : 0;
+        $user->sms_notifications = $request->has('sms_notifications') ? 1 : 0;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
@@ -96,6 +96,6 @@ class ProfileController extends Controller
 
         $user->save();
 
-        return redirect()->route('edit_profile')->with('success', 'Настройки успешно обновлены');
+        return redirect()->route('user.settings')->with('success', 'Ваши данные успешно обновлены');
     }
 }

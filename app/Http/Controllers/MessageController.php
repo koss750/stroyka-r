@@ -205,6 +205,7 @@ class MessageController extends Controller
         ]);
 
         if ($request->hasFile('attachment')) {
+            dd("true");
             $file = $request->file('attachment');
             $path = $file->store('message_attachments', 'public');
             $publicPath = public_path($path);
@@ -223,9 +224,17 @@ class MessageController extends Controller
 
     public function sendMessage(Request $request)
     {
+
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'content' => 'required|string'
+            'content' => 'required|string',
+            'attachment' => 'nullable|file|mimes:xls,xlsx,pdf|max:500', // 500 KB max
+        ]);
+
+        $message = Message::create([
+            'sender_id' => auth()->id(),
+            'receiver_id' => $request->receiver_id,
+            'content' => $request->content,
         ]);
 
         if ($request->receiver_id == 7) {
@@ -238,15 +247,21 @@ class MessageController extends Controller
             ));
         }
 
-        $message = Message::create([
-            'sender_id' => Auth::id(),
-            'receiver_id' => $request->receiver_id,
-            'content' => $request->content
-        ]);
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $path = $file->store('message_attachments', 'public');
+            $publicPath = public_path($path);
+            
+            MessageAttachment::create([
+                'message_id' => $message->id,
+                'filename' => $file->getClientOriginalName(),
+                'path' => $publicPath,
+                'mime_type' => $file->getMimeType(),
+                'size' => $file->getSize(),
+            ]);
+        }
 
-        
-
-        return response()->json($message);
+        return response()->json($message->load('attachments'));
     }
 
     /**

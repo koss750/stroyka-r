@@ -150,7 +150,7 @@ Route::prefix('vora')->group(function () {
         Route::get('/messages','messages');
         Route::get('/app-calender','app_calender');
         Route::get('/app-profile','app_profile'); // сделать форму более подходящей к настоящему использованию. кнопку заблокировать заменить на редактировать и убрать остальныке, имейл убрать нафиг. адерса разделить на юридический и фактический адрес.
-        Route::get('/edit-profile','edit_profile');
+        //Route::get('/edit-profile','edit_profile');
         Route::match(['get','post'], '/post-details','post_details');
         Route::get('/chart-chartist','chart_chartist');
         Route::get('/chart-chartjs','chart_chartjs');
@@ -297,7 +297,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/messages/{id}/unread', [MessageController::class, 'markAsUnread'])->name('messages.markAsUnread');
     Route::put('/messages/{messageId}/archive', [MessageController::class, 'archiveMessage'])->name('messages.archive');
     Route::get('/profile', [ProfileController::class, 'settings'])->name('user.settings');
-    Route::put('/profile', [ProfileController::class, 'updateSettings'])->name('user.updateSettings');
+    Route::post('/profile', [ProfileController::class, 'updateSettings'])->name('user.update');
     Route::get('/my-account', [UIController::class, 'my_account'])->name('my.account');
     Route::get('/my-orders', [DesignController::class, 'getDemoOrder']);
     Route::get('/my-orders/view/{id}', [ProjectController::class, 'view'])->name('orders.view');

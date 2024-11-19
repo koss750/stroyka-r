@@ -30,6 +30,9 @@ class User extends Authenticatable
         'phone',
         'roles',
         'permissions',
+        'email_notifications',
+        'sms_notifications',
+        'regions',
     ];
 
     /**
@@ -52,7 +55,7 @@ class User extends Authenticatable
         'password' => 'hashed',
         'superadmin' => 'boolean',
         'permissions' => 'array',
-        'roles' => 'array',
+        'roles' => 'array'
     ];
 
     public function setLastSeenAttribute($value)
@@ -72,6 +75,11 @@ class User extends Authenticatable
         } else {
             return 'Был в сети ' . Carbon::now()->diffInDays($lastSeen) . ' дней назад';
         }
+    }
+
+    public function region()
+    {
+        return Region::find($this->regions);
     }
 
     public function supplier()
