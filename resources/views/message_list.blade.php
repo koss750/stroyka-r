@@ -118,7 +118,10 @@ $(document).ready(function() {
 
                     if (message.attachments && message.attachments.length > 0) {
                         message.attachments.forEach(function(attachment) {
-                            const icon = attachment.mime_type.includes('pdf') ? 'fa-file-pdf' : 'fa-file-excel';
+                            const icon = attachment.mime_type.includes('image') ? 'fa-file-image' : attachment.mime_type.includes('excel') ? 'fa-file-excel' : 'fa-file-pdf';
+                            if (icon == 'fa-file-image') {
+                                messagesHtml += `<img style="max-width: 50%;" src="${attachment.url}" alt="${attachment.filename}"/>`;
+                            }
                             messagesHtml += `
                                 <div class="attachment">
                                     <a href="${attachment.url}" target="_blank">
@@ -686,4 +689,10 @@ $(document).ready(function() {
     });
 });
 </script>
+<style>
+    .attachment-image {
+        max-width: 50%;
+        max-height: 50%;
+    }
+</style>
 @endpush

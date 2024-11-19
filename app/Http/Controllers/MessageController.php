@@ -228,7 +228,7 @@ class MessageController extends Controller
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
             'content' => 'required|string',
-            'attachment' => 'nullable|file|mimes:xls,xlsx,pdf|max:500', // 500 KB max
+            'attachment' => 'nullable|file|mimes:xls,xlsx,pdf,png,jpg,jpeg|max:500', // 500 KB max
         ]);
 
         $message = Message::create([
