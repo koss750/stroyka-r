@@ -87,15 +87,27 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
         return $foundation->custom_order_title;
     }
 
-    public function checkForSectionTitleException($foundation, $sectionTitle) {
+    public function checkForSectionTitleException($foundation, $section) {
+
+
         if (!isset($foundation->exceptions['sectionTitle'])) {
             return false;
+        } else {
+            if (is_array($foundation->exceptions['sectionTitle'])) {
+                foreach ($foundation->exceptions['sectionTitle'] as $sectionTitle) {
+                    if ($section === $sectionTitle['compare_against'])
+                    {
+                        return $sectionTitle['change_to'];
+                    }
+                }
+                return false;
+            } else {
+                if ($section === $foundation->exceptions['sectionTitle']['compare_against'])
+                {
+                    return $foundation->exceptions['sectionTitle']['change_to'];
+                } else return false;
+            }
         }
-        //compare $sectionTitle against $foundation->exceptions['sectionTitle']['compare_against']
-        if (strpos($sectionTitle, $foundation->exceptions['sectionTitle'][0]['compare_against']) !== false)
-        {
-            return $foundation->exceptions['sectionTitle'][0]['change_to'];
-        } else return false;
     }
 
     public function checkForAdditionalRowsAfterTitle($foundation) {
@@ -110,6 +122,7 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
         $this->info('Processing foundation: ' . $foundation->title);
         $parameters['sheet_structure'] = [];
         $spreadsheet = IOFactory::createReader('Xlsx')->load(storage_path('templates/foundation/' . $foundation->template_path));
+        
         Calculation::getInstance($spreadsheet)->clearCalculationCache();
         
         // Loop through sheets and select the one with 'Смета' in the name
@@ -130,6 +143,12 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
         
         $spreadsheet->disconnectWorksheets();
         unset($spreadsheet);
+    }
+
+    private function sanitizeSectionTitle($title) {
+        //remove any numbers, dots and spaces before first letter
+        $title = preg_replace('/^[^a-zA-Zа-яА-Я]+/', '', $title);
+        return $title;
     }
 
     private function generateSheetStructure($worksheet, $foundation): array
@@ -197,6 +216,8 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
             return $sheetStructure;
         }
 
+        
+
         $sheetStructure['endOfLabour'] = [
             "col" => Coordinate::stringFromColumnIndex($sheetStructure['endOfLabour'] + 1),
             "colIndex" => $sheetStructure['endOfLabour']
@@ -224,21 +245,24 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
         }
 
         $sectionCount = 0;
+        
         foreach ($worksheetData as $rowIndex => $row) {
             if (!empty($row[0]) && empty($row[3]) && empty($row[6])) {
                 if ($sectionCount === 0 && !is_numeric($row[0][0])) {
                     continue;
+                } else {
+                    $value = $this->sanitizeSectionTitle($row[0]);
+                    $sheetStructure['sections'][++$sectionCount] = [
+                        "value" => $value,
+                        "colIndex" => 0,
+                        "rowIndex" => $rowIndex
+                    ];
                 }
-                $sheetStructure['sections'][++$sectionCount] = [
-                    "value" => $row[0],
-                    "colIndex" => 0,
-                    "rowIndex" => $rowIndex
-                ];
             }
         }
         
         foreach ($sheetStructure['sections'] as $section => $sectionData) {
-            if ($sectionTitle = $this->checkForSectionTitleException($foundation, $sectionData['value'])) {
+            if ($sectionTitle = $this->checkForSectionTitleException($foundation, $section)) {
                 $sectionData['value'] = $sectionTitle;
                 $sheetStructure['sections'][$section]['sectionTitleAction'] = true;
             } else $sheetStructure['sections'][$section]['sectionTitleAction'] = false;
@@ -251,7 +275,7 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
             while (!$endRow) {
                 // Get the row data
                 $rowVals = $worksheet->rangeToArray('A' . $rowIndex . ':' . $sheetStructure['lastLetter']['col'] . $rowIndex, null, true, false)[0];
-        
+                
                 $isLastRow = $this->isLastRow($rowVals, $sheetStructure);
         
                 if ($isLastRow) {

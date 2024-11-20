@@ -39,6 +39,7 @@ class GenerateOrderExcelJob implements ShouldQueue
     protected $smetaTotalMaterial;
     protected $smetaTotalShipping;
     protected $labourIncluded;
+    protected $deliverySection;
 
     protected const ROW_ADDITIONAL_LINE_START = 9;
     protected const ROW_SECTION_START = 12;
@@ -68,7 +69,7 @@ class GenerateOrderExcelJob implements ShouldQueue
         
         $project = Project::findOrFail($this->projectId);
 
-        $this->labourIncluded = ($project->price_type === 'smeta_project_labour' || str_contains($project->price_type, 'foundation'));
+        $this->labourIncluded = ($project->price_type === 'smeta_project_labour' || str_contains($project->order_type, 'foundation'));
         //dd($this->labourIncluded, $project->price_type);
 
         $spreadsheet = IOFactory::createReader('Xlsx')->load(storage_path('templates/empty.xlsx'));
@@ -295,6 +296,15 @@ class GenerateOrderExcelJob implements ShouldQueue
     {
         $fillWorksheetTime = microtime(true);
         
+        $deliverySection = false;
+        $highestIndex = 0;
+        foreach ($sheetData['sections'] as $index => $section) {
+            if ($index > $highestIndex) {
+                $highestIndex = $index;
+            }
+        }
+        $sheetData['sections'][$highestIndex]['materialIsDelivery'] = true;
+        
         $currentRow = $startRow+1;
         $additionalLineRow = 8;
         //Log::info("Starting fillWorksheet at row: $currentRow");
@@ -507,7 +517,7 @@ class GenerateOrderExcelJob implements ShouldQueue
                         $worksheet->getRowDimension($currentRow)->setRowHeight(30);
                     }
                     
-                    if ($lastSection) {
+                    if ($deliverySection) {
                         $material['materialTotal'] = 0;
                         $material['materialPrice'] = 0;
                     }

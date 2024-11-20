@@ -20,8 +20,52 @@ use App\Models\Foundation;
 use App\Jobs\FoundationOrderFileJob;
 use App\Jobs\GenerateOrderExcelJob;
 
+
 class OrderController extends Controller
 {
+    public function processMembershipOrder(Request $request)
+    {
+        //assign or create user
+        if (Auth::check() && $request->input('logged_in')) {
+            $user = Auth::user();
+        } elseif (!$request->input('logged_in')) {
+            $registerController = new RegisterController();
+            $user = $registerController->create($request, true);
+            $request->merge(['user_id' => $user->id]);
+        } else {
+            $user = null;
+        }
+
+        //$price_type_id = $request->input('price_type_id');
+        $price_type_id = 3;
+        $price_type = PricePlan::findOrFail($price_type_id);
+
+        $orderType = 'membership';
+        
+        
+        if (env('PAYMENT_PROVIDER') === 'TEST-POS') {
+            $result = [
+                    'paymentUrl' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => base64_encode("M" . $request->input('inn') . '_' . date('Ymd'))]),
+                    'payment_id' => $payment_reference
+            ];
+        } else {
+            try {
+                $tinkoff = app(TinkoffService::class);
+                    //dd($request->all());
+                    $result = $tinkoff->initPayment([
+                        'amount' => $price_type->price*100,
+                        'email' => $user->email,
+                        'phone' => $user->phone,
+                        'orderId' => "M" . $request->input('inn') . '_' . date('Ymd'),
+                        'description' => "Подписка на СТРОЙКА.com на 30 дней",
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Tinkoff payment error: ' . $e->getMessage());
+                    return response()->json(['error' => 'Payment system error'], 500);
+            }
+        }
+        $registerController->create($request, true);
+    }
 
     public function processFoundationOrder(Request $request)
     {
@@ -49,9 +93,12 @@ class OrderController extends Controller
         $human_ref = $projectController->generateHumanReference($foundation->id, $orderType);
         $payment_amount = $request->input('payment_amount');
         $payment_reference = (string)(random_int(1000000000, 9999999999));
+        $is_example = 1;
         
         if ($request->input('payment_amount') > 0) {
             
+            $is_example = 0;
+
             if (env('PAYMENT_PROVIDER') === 'TEST-POS') {
                 $result = [
                     'paymentUrl' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => base64_encode($human_ref)]),
@@ -79,14 +126,13 @@ class OrderController extends Controller
                 'payment_id' => $payment_reference
             ];
         }
-
         // Create a new project for the foundation order
         $project = Project::create([
             'user_id' => $user->id,
             'human_ref' => $human_ref,
             'order_type' => $orderType,
             'ip_address' => $request->ip(),
-            'is_example' => $payment_amount == 0,
+            'is_example' => $is_example,
             'payment_reference' => $payment_reference,
             'payment_amount' => $payment_amount,
             'foundation_id' => $foundation->id,
@@ -191,39 +237,6 @@ class OrderController extends Controller
             'paymentUrl' => $paymentUrl,
             'urlcontent' => $urlcontent
         ]);
-    }
-
-    public function processMembershipOrder(Request $request)
-    {
-        //check if user already registered as a normal user
-        $user = User::where('email', $request->input('email'))->first();
-        if ($user) {
-            return response()->json(['error' => 'User already registered'], 401);
-        } else {
-            //create user
-            $registerController = new RegisterController();
-            $user = $registerController->create($request, true);
-            $request->merge(['user_id' => $user->id]);
-        }
-
-
-        /*
-        payment_provider: 'yandex',
-                    payment_amount: 1,
-                    order_type: 'membership',
-                    inn: document.getElementById('inn').value,
-                    company_name: document.getElementById('company_name').value,
-                    name: document.getElementById('contact_name').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phone').value,
-                    additional_phone: document.getElementById('additional_phone').value,
-                    password: document.getElementById('password').value,
-                    legal_address: document.getElementById('legal_address').value,
-                    physical_address: document.getElementById('physical_address').value,
-                    main_region: mainRegionSelect.value,
-                    region_codes: regionCodesInput.value,
-                    offer_id: offer_id,
-        */
     }
 
     public function processExampleSmetaOrder(Request $request)

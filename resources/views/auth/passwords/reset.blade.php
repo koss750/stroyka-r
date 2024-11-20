@@ -6,13 +6,13 @@
         <div class="col-md-6 col-lg-4">
             <div class="card mt-5">
                 <div class="card-body">
-                    <h2 class="text-center mb-4">{{ __('Сброс пароля') }}</h2>
+                    <h2 class="text-center mb-4">{{ __('Восстановление пароля') }}</h2>
                     <form method="POST" action="{{ route('password.update') }}">
                         @csrf
                         <input type="hidden" name="token" value="{{ $token }}">
                         <div class="mb-3">
                             <label for="email" class="form-label">{{ __('Email') }}</label>
-                            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus>
+                            <input id="email" type="email" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ $email ?? old('email') }}" required autocomplete="email" autofocus style="text-transform: none;">
                             @error('email')
                                 <span class="invalid-feedback" role="alert">
                                     <strong>{{ $message }}</strong>

@@ -10,6 +10,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Musonza\Chat\Traits\Messageable;
 use Carbon\Carbon;
 use App\Models\Supplier;
+use App\Notifications\ResetPassword as ResetPasswordNotification;
 
 
 class User extends Authenticatable
@@ -144,6 +145,11 @@ class User extends Authenticatable
     public function hasAnyRole($roles)
     {
         return !empty(array_intersect($roles, $this->getRoles()));
+    }
+
+    public function sendPasswordResetNotification($token)
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     public function getRoles()

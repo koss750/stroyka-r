@@ -29,6 +29,8 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\TurboPageController;
 use App\Http\Controllers\FeedbackController;
 use Illuminate\Support\Facades\Cache;
+use App\Http\Controllers\FoundationPlanController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -214,6 +216,15 @@ Route::prefix('vora')->group(function () {
     });
 });
 
+Route::get('forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])
+    ->name('password.request');
+Route::post('forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])
+    ->name('password.email');
+Route::get('reset-password/{token}', [ForgotPasswordController::class, 'showResetForm'])
+    ->name('password.reset');
+Route::post('reset-password', [ForgotPasswordController::class, 'reset'])
+    ->name('password.update');
+
 //Route::post('/process-foundation-smeta-order', [OrderController::class, 'processFoundationSmetaOrder'])->name('process-foundation-smeta-order');
 Route::post('/process-project-smeta-order', [OrderController::class, 'processProjectSmetaOrder'])->name('process-project-smeta-order');
 Route::post('/process-example-smeta-order', [OrderController::class, 'processExampleSmetaOrder'])->name('process-example-smeta-order');
@@ -285,6 +296,11 @@ Route::get('/get-sheetname-suggestions', function (Request $request) {
 });
 
 Route::get('/payment/set-status/{payment_status}/{order_id}', [OrderController::class, 'setPaymentStatus'])->name('payment.set.status');
+
+Route::get('/foundation-plan', [FoundationPlanController::class, 'index'])->name('foundation.plan');
+Route::post('/foundation-plan/save', [FoundationPlanController::class, 'store'])->name('foundation.plan.store');
+Route::get('/foundation-plan/{foundationPlan}', [FoundationPlanController::class, 'show'])->name('foundation.plan.show');
+Route::delete('/foundation-plan/{foundationPlan}', [FoundationPlanController::class, 'destroy'])->name('foundation.plan.destroy');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -230,11 +230,12 @@ class FoundationOrderFileJob implements ShouldQueue
 
         $lastSectionKey = sizeof($sheetStructure['sections'])-1;
         if (isset($sheetStructure['sections'][$lastSectionKey])) {
-                $params['sheet_structure']['shipping'] = $sheetStructure['sections'][$lastSectionKey]['sectionTotalMaterial'];
+            $params['sheet_structure']['shipping'] = $sheetStructure['sections'][$lastSectionKey]['sectionTotalMaterial'];
+        }
+        if (isset($unsetArray)) {
+            foreach ($unsetArray as $sectionKey) {
+                unset($sheetStructure['sections'][$sectionKey]);
             }
-
-        foreach ($unsetArray as $sectionKey) {
-            unset($sheetStructure['sections'][$sectionKey]);
         }
 
         // Add boxStart values
@@ -310,10 +311,18 @@ class FoundationOrderFileJob implements ShouldQueue
 
         if ($foundationParams['sheet_structure']['hasDynamicSwaps']) {
             foreach ($foundationParams['sheet_structure']['dynamicSwaps'] as $key => $cell) {
-                $foundationParams['sheet_structure']['dynamicSwaps'][$key] = ($this->getCellValue($sheet, $cell));
+                
+                if (is_array($cell)) {
+                    foreach ($cell as $subKey => $subCell) {
+                        $foundationParams['sheet_structure']['dynamicSwaps'][$key][$subKey] = ($this->getCellValue($sheet, $subCell));
+                    }
+                } else {
+                    $foundationParams['sheet_structure']['dynamicSwaps'][$key] = ($this->getCellValue($sheet, $cell));
+                }
                 if (is_numeric($foundationParams['sheet_structure']['dynamicSwaps'][$key])) {
                     $foundationParams['sheet_structure']['dynamicSwaps'][$key] = round($foundationParams['sheet_structure']['dynamicSwaps'][$key], 2);
                 }
+                
             }
             if ($foundationParams['sheet_structure']['hasTitleSwaps']) {
                 $foundationParams['sheet_structure']['title'];
@@ -325,17 +334,26 @@ class FoundationOrderFileJob implements ShouldQueue
                 unset($foundationParams['sheet_structure']['titleSwaps']);
             }
             unset($foundationParams['sheet_structure']['hasTitleSwaps']);
+
             if ($foundationParams['sheet_structure']['hasSectionSwaps']) {
                 foreach ($foundationParams['sheet_structure']['sectionSwaps'] as $sectionSwap) {
                     foreach ($foundationParams['sheet_structure']['sections'] as $sectionKey => $section) {
                         $compareAgainst = $sectionSwap['compare_against'];
-                        $changeTo = $sectionSwap['change_to'];
-                        foreach ($foundationParams['sheet_structure']['dynamicSwaps'] as $key => $value) {
-                            if (strpos($changeTo, $key) !== false) {
-                                $changeTo = str_replace($key, $value, $changeTo);
+                        if ($sectionKey === $compareAgainst) {
+                            $changeTo = $sectionSwap['change_to'];
+                            foreach ($foundationParams['sheet_structure']['dynamicSwaps'] as $key => $value) {
+                                if (is_array($value)) {
+                                    foreach ($value as $subKey => $subValue) {
+                                        if (strpos($changeTo, $subKey) !== false) {
+                                            $changeTo = str_replace($subKey, $subValue, $changeTo);
+                                        }
+                                    }
+                                } else {
+                                    if (strpos($changeTo, $key) !== false) {
+                                        $changeTo = str_replace($key, $value, $changeTo);
+                                    }
+                                }
                             }
-                        }
-                        if (strpos($section['value'], $compareAgainst) !== false) {
                             $foundationParams['sheet_structure']['sections'][$sectionKey]['value'] = $changeTo;
                         }
                     }

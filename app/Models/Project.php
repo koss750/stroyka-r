@@ -34,6 +34,7 @@ class Project extends Model
         'payment_link',
         'payment_status',
         'price_type',
+        'is_example',
     ];
 
     protected $casts = [
