@@ -261,7 +261,12 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
             }
         }
         
+        $sectionCount = count($sheetStructure['sections']);
         foreach ($sheetStructure['sections'] as $section => $sectionData) {
+            if ($section === $sectionCount) {
+                $lastSection = true;
+            } else $lastSection = false;
+            $sheetStructure['sections'][$section]['lastSection'] = $lastSection;
             if ($sectionTitle = $this->checkForSectionTitleException($foundation, $section)) {
                 $sectionData['value'] = $sectionTitle;
                 $sheetStructure['sections'][$section]['sectionTitleAction'] = true;
@@ -289,6 +294,11 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
             }
         
             $sheetStructure['sections'][$section]['endRow'] = $rowIndex - 1;
+        }
+
+        foreach ($sheetStructure['sections'][$sectionCount]['materialItems'] as $materialIndex => $material) {
+            $sheetStructure['sections'][$sectionCount]['materialItems'][$materialIndex]['materialTotalCell'] = "A1";
+            $sheetStructure['sections'][$sectionCount]['materialItems'][$materialIndex]['materialPriceCell'] = "A1";
         }
 
         // Find total box
@@ -471,7 +481,6 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
             $materialSubHeadingKey = $materialSubHeading[1];
             $materialSubHeading = $materialSubHeading[0];
         }
-        
         
         $labourItem = [
             "labourNumber" => $labourNumber,

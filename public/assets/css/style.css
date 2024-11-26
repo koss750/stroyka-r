@@ -894,6 +894,7 @@ footer ul li a {
 }
 
 #message-input {
+    width: 80%;
     text-transform: none;
 }
 

@@ -212,9 +212,15 @@ class GenerateInvoiceStructuresCommand extends Command
             }
         }
         
+        $sectionCount = count($sheetStructure['sections']);
         foreach ($sheetStructure['sections'] as $section => $sectionData) {
             $rowIndex = $sectionData['rowIndex'] + 2; // Start 1 row below the current start
             $endRow = false;
+            $lastSection = false;
+            if ($section === $sectionCount) {
+                $lastSection = true;
+            }
+            $sheetStructure['sections'][$section]['lastSection'] = $lastSection;
             $sheetStructure['sections'][$section]['labourItems'] = [];
             $sheetStructure['sections'][$section]['materialItems'] = [];
         

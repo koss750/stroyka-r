@@ -386,6 +386,8 @@ class OrderController extends Controller
     {
         if ($request->input('order_type') == 'foundation') {
             return $this->processFoundationOrder($request);
+        } else if ($request->input('order_type') == 'registration') {
+            return $this->processRegistrationOrder($request);
         } else {
             return $this->processProjectSmetaOrder($request);
         }

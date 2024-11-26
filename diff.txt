@@ -1,0 +1,470 @@
+diff --git a/app/Console/Commands/GenerateInvoiceStructuresCommand.php b/app/Console/Commands/GenerateInvoiceStructuresCommand.php
+index e710075..b2bc1d2 100644
+--- a/app/Console/Commands/GenerateInvoiceStructuresCommand.php
++++ b/app/Console/Commands/GenerateInvoiceStructuresCommand.php
+@@ -212,9 +212,15 @@ class GenerateInvoiceStructuresCommand extends Command
+             }
+         }
+         
++        $sectionCount = count($sheetStructure['sections']);
+         foreach ($sheetStructure['sections'] as $section => $sectionData) {
+             $rowIndex = $sectionData['rowIndex'] + 2; // Start 1 row below the current start
+             $endRow = false;
++            $lastSection = false;
++            if ($section === $sectionCount) {
++                $lastSection = true;
++            }
++            $sheetStructure['sections'][$section]['lastSection'] = $lastSection;
+             $sheetStructure['sections'][$section]['labourItems'] = [];
+             $sheetStructure['sections'][$section]['materialItems'] = [];
+         
+diff --git a/app/Console/Commands/GenerateInvoiceStructuresFoundationCommand.php b/app/Console/Commands/GenerateInvoiceStructuresFoundationCommand.php
+index 3018ae2..c37e405 100644
+--- a/app/Console/Commands/GenerateInvoiceStructuresFoundationCommand.php
++++ b/app/Console/Commands/GenerateInvoiceStructuresFoundationCommand.php
+@@ -261,7 +261,12 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
+             }
+         }
+         
++        $sectionCount = count($sheetStructure['sections']);
+         foreach ($sheetStructure['sections'] as $section => $sectionData) {
++            if ($section === $sectionCount) {
++                $lastSection = true;
++            } else $lastSection = false;
++            $sheetStructure['sections'][$section]['lastSection'] = $lastSection;
+             if ($sectionTitle = $this->checkForSectionTitleException($foundation, $section)) {
+                 $sectionData['value'] = $sectionTitle;
+                 $sheetStructure['sections'][$section]['sectionTitleAction'] = true;
+@@ -291,6 +296,11 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
+             $sheetStructure['sections'][$section]['endRow'] = $rowIndex - 1;
+         }
+ 
++        foreach ($sheetStructure['sections'][$sectionCount]['materialItems'] as $materialIndex => $material) {
++            $sheetStructure['sections'][$sectionCount]['materialItems'][$materialIndex]['materialTotalCell'] = "A1";
++            $sheetStructure['sections'][$sectionCount]['materialItems'][$materialIndex]['materialPriceCell'] = "A1";
++        }
++
+         // Find total box
+         $searchPhrases = ["start" => "Ст-ть работ", "end" => "ВСЕГО по смете"];
+ 
+@@ -472,7 +482,6 @@ class GenerateInvoiceStructuresFoundationCommand extends Command
+             $materialSubHeading = $materialSubHeading[0];
+         }
+         
+-        
+         $labourItem = [
+             "labourNumber" => $labourNumber,
+             "labourTitle" => $labourTitle,
+diff --git a/app/Http/Controllers/OrderController.php b/app/Http/Controllers/OrderController.php
+index b10cbae..28bcba6 100644
+--- a/app/Http/Controllers/OrderController.php
++++ b/app/Http/Controllers/OrderController.php
+@@ -386,6 +386,8 @@ class OrderController extends Controller
+     {
+         if ($request->input('order_type') == 'foundation') {
+             return $this->processFoundationOrder($request);
++        } else if ($request->input('order_type') == 'registration') {
++            return $this->processRegistrationOrder($request);
+         } else {
+             return $this->processProjectSmetaOrder($request);
+         }
+diff --git a/app/Http/Kernel.php b/app/Http/Kernel.php
+index 3a9bc9e..3efd363 100644
+--- a/app/Http/Kernel.php
++++ b/app/Http/Kernel.php
+@@ -21,7 +21,7 @@ class Kernel extends HttpKernel
+         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+         \App\Http\Middleware\TrimStrings::class,
+         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+-        
++        \App\Http\Middleware\ContentSecurityPolicy::class,
+     ];
+ 
+     /**
+@@ -37,6 +37,7 @@ class Kernel extends HttpKernel
+             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+             \App\Http\Middleware\VerifyCsrfToken::class,
+             \Illuminate\Routing\Middleware\SubstituteBindings::class,
++            \App\Http\Middleware\ContentSecurityPolicy::class,
+         ],
+ 
+         'api' => [
+diff --git a/app/Jobs/FoundationOrderFileJob.php b/app/Jobs/FoundationOrderFileJob.php
+index 0802d95..971271c 100644
+--- a/app/Jobs/FoundationOrderFileJob.php
++++ b/app/Jobs/FoundationOrderFileJob.php
+@@ -198,6 +198,9 @@ class FoundationOrderFileJob implements ShouldQueue
+                 $quantity = $this->formatNumber($this->getCellValue($sheet, $labourItem['labourQuantityCell']), $decimalPlaces);
+                 $price = $this->formatNumber($this->getCellValue($sheet, $labourItem['labourPriceCell']), 2); // Always 2 decimals for prices
+ 
++                if ($labourItem['labourAdditional']) {
++                    $labourItem['labourAdditionalTitle'] = $this->getCellValue($sheet, $labourItem['labourAdditionalTitleCell']);
++                }
+                 $labourItem['labourQuantity'] = $quantity;
+                 $labourItem['labourPrice'] = $price;
+                 $labourItem['labourTotal'] = $this->formatNumber($this->getCellValue($sheet, $labourItem['labourTotalCell']), 2); // Always 2 decimals for totals
+@@ -311,7 +314,7 @@ class FoundationOrderFileJob implements ShouldQueue
+ 
+         if ($foundationParams['sheet_structure']['hasDynamicSwaps']) {
+             foreach ($foundationParams['sheet_structure']['dynamicSwaps'] as $key => $cell) {
+-                
++                //dd ($key, $cell, $this->getCellValue($sheet, $cell));
+                 if (is_array($cell)) {
+                     foreach ($cell as $subKey => $subCell) {
+                         $foundationParams['sheet_structure']['dynamicSwaps'][$key][$subKey] = ($this->getCellValue($sheet, $subCell));
+@@ -325,7 +328,8 @@ class FoundationOrderFileJob implements ShouldQueue
+                 
+             }
+             if ($foundationParams['sheet_structure']['hasTitleSwaps']) {
+-                $foundationParams['sheet_structure']['title'];
++                //$foundationParams['sheet_structure']['title'];
++                //dd($foundationParams['sheet_structure']['dynamicSwaps']);
+                 foreach ($foundationParams['sheet_structure']['dynamicSwaps'] as $key => $value) {
+                     if (strpos($foundationParams['sheet_structure']['title'], $key) !== false) {
+                         $foundationParams['sheet_structure']['title'] = str_replace($key, $value, $foundationParams['sheet_structure']['title']);
+diff --git a/app/Jobs/GenerateOrderExcelJob.php b/app/Jobs/GenerateOrderExcelJob.php
+index 5e43cf2..8012435 100644
+--- a/app/Jobs/GenerateOrderExcelJob.php
++++ b/app/Jobs/GenerateOrderExcelJob.php
+@@ -492,6 +492,7 @@ class GenerateOrderExcelJob implements ShouldQueue
+                     if ($labour['labourAdditional']) {
+                         $worksheet->setCellValue("C{$currentRow}", $labour['labourAdditionalTitle']);
+                     }
++                    
+                     $worksheet->setCellValue("D{$currentRow}", $labour['labourUnit']);
+                     $worksheet->setCellValue("E{$currentRow}", $labour['labourQuantity']);
+                     $worksheet->getCell("E{$currentRow}")->getStyle()->getNumberFormat()->setFormatCode($labour['labourFormat']);
+@@ -517,7 +518,7 @@ class GenerateOrderExcelJob implements ShouldQueue
+                         $worksheet->getRowDimension($currentRow)->setRowHeight(30);
+                     }
+                     
+-                    if ($deliverySection) {
++                    if ((isset($section['lastSection']) && $section['lastSection']) || $deliverySection) {
+                         $material['materialTotal'] = 0;
+                         $material['materialPrice'] = 0;
+                     }
+diff --git a/public/assets/css/style.css b/public/assets/css/style.css
+index d43f6f4..e6dddde 100644
+--- a/public/assets/css/style.css
++++ b/public/assets/css/style.css
+@@ -894,6 +894,7 @@ footer ul li a {
+ }
+ 
+ #message-input {
++    width: 80%;
+     text-transform: none;
+ }
+ 
+diff --git a/resources/views/components/payment-modal.blade.php b/resources/views/components/payment-modal.blade.php
+index 98cd0c8..35c1040 100644
+--- a/resources/views/components/payment-modal.blade.php
++++ b/resources/views/components/payment-modal.blade.php
+@@ -38,6 +38,11 @@
+             $label = "Стоимость сметы";
+             $button_label = "Оплатить";
+         }
++    } else if ($type === 'registration') {
++        $order_type = 'registration';
++        $modal_id = "paymentModal";
++        $label = "Оплата регистрации";
++        $button_label = "Оплатить";
+     }
+ @endphp
+ 
+@@ -53,22 +58,31 @@
+                     <div class="col-md-5">
+                         <form id="{{ $modal_id }}_paymentForm">
+                             @guest
+-                                <div class="form-group">
+-                                    <label for="name">Имя:</label>
+-                                    <input type="text" class="form-control" id="name" name="name" required>
++                                @if ($order_type != 'registration')
++                                <div id="registration-warning" class="alert alert-info">
++                                    <p>Для доступа к нашим услугам необходимо зарегистрироваться, заполнив свои данные на этой странице.</p>
++                                    <button type="button" class="btn btn-primary mt-2" id="acceptRegistration">Согласен</button>
+                                 </div>
+-                                <div class="form-group">
+-                                    <label for="email">Email:</label>
+-                                    <input type="email" class="form-control no-text-transform" id="email" name="email" required>
+-                                </div>
+-                                <div class="form-group">
+-                                    <label for="phone">Телефон:</label>
+-                                    <input type="tel" class="form-control" id="phone" name="phone" required>
+-                                </div>
+-                                <div class="form-group">
+-                                    <label for="password">Создать пароль:</label>
+-                                    <input type="text" class="form-control" id="password" name="password" required>
++                                
++                                <div id="registration-form" style="display: none;">
++                                    <div class="form-group">
++                                        <label for="name">Имя:</label>
++                                        <input type="text" class="form-control" id="name" name="name" required>
++                                    </div>
++                                    <div class="form-group">
++                                        <label for="email">Email:</label>
++                                        <input type="email" class="form-control no-text-transform" id="email" name="email" required>
++                                    </div>
++                                    <div class="form-group">
++                                        <label for="phone">Телефон:</label>
++                                        <input type="tel" class="form-control" id="phone" name="phone" required>
++                                    </div>
++                                    <div class="form-group">
++                                        <label for="password">Создать пароль:</label>
++                                        <input type="text" class="form-control" id="password" name="password" required>
++                                    </div>
+                                 </div>
++                                @endif
+                             @endguest
+                             @if ($price > 0 && $order_type == 'design')
+                             <div class="form-group">
+@@ -213,16 +227,38 @@
+                     const cellIndex = input.getAttribute('data-excel-cell');
+                     let cellValue;
+ 
+-                    if ({{ $price }} === 0) {
+-                        // For example/free orders, use placeholder values
+-                        cellValue = input.placeholder || '';
+-                    } else {
+-                        // For paid orders, use actual input values
++                    if (input.tagName.toLowerCase() === 'select') {
++                        // For select elements, get the selected option's value
+                         cellValue = input.value || '';
++                    } else {
++                        // For other input types, use existing logic
++                        if ({{ $price }} === 0) {
++                            cellValue = input.placeholder || '';
++                        } else {
++                            cellValue = input.value || '';
++                        }
+                     }
++                    
+                     orderData.foundation_id = '{{ $id }}';
+                     orderData.foundation_data[cellIndex] = cellValue;
+                 });
++            } else if ('{{ $type }}' === 'registration') {
++                const registrationForm = document.getElementById('legal-entity-form');
++                orderData = {
++                    inn: document.getElementById('inn').value,
++                    company_name: document.getElementById('company_name').value,
++                    kpp: document.getElementById('kpp').value,
++                    ogrn: document.getElementById('ogrn').value,
++                    legal_address: document.getElementById('legal_address').value,
++                    physical_address: document.getElementById('physical_address').value,
++                    email: document.getElementById('email').value,
++                    phone: document.getElementById('phone').value,
++                    additional_phone: document.getElementById('additional_phone').value,
++                    contact_name: document.getElementById('contact_name').value,
++                    password: document.getElementById('password').value,
++                    main_region: document.getElementById('main_region').value,
++                    region_codes: document.getElementById('region-codes').value,
++                };
+             } else {
+                 // Design order specific data
+                 orderData.design_id = '{{ $id }}';
+@@ -303,6 +339,25 @@
+             button.disabled = false;
+             button.innerHTML = button.getAttribute('data-original-text');
+         }
++
++        const acceptButton = document.getElementById('acceptRegistration');
++        const registrationForm = document.getElementById('registration-form');
++        const registrationWarning = document.getElementById('registration-warning');
++        const submitButton = document.querySelector('button[type="submit"]');
++
++        if (submitButton) {
++            submitButton.style.display = 'none';
++        }
++
++        if (acceptButton) {
++            acceptButton.addEventListener('click', function() {
++                registrationForm.style.display = 'block';
++                registrationWarning.style.display = 'none';
++                if (submitButton) {
++                    submitButton.style.display = 'block';
++                }
++            });
++        }
+     });
+ </script>
+ @endpush
+diff --git a/resources/views/layouts/alternative.blade.php b/resources/views/layouts/alternative.blade.php
+index a0c5d34..1fd5b9c 100644
+--- a/resources/views/layouts/alternative.blade.php
++++ b/resources/views/layouts/alternative.blade.php
+@@ -43,7 +43,7 @@
+     <script src="https://xn--80ardojfh.com/assets/js/jquery.min.js"></script>
+     <script src="https://xn--80ardojfh.com/assets/js/bootstrap.min.js"></script>
+     <script src="{{ asset('js/custom.js') }}?v={{ time() }}"></script>
+-    @if (env('TEST_ENVIRONMENT') != 'true')
++    @if (env('TEST_ENVIRONMENT') == 'true')
+     <!-- Yandex.Metrika counter -->
+     <script type="text/javascript">
+         (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+diff --git a/resources/views/legal_entity_confirmation.blade.php b/resources/views/legal_entity_confirmation.blade.php
+index 55a822b..a707e6f 100644
+--- a/resources/views/legal_entity_confirmation.blade.php
++++ b/resources/views/legal_entity_confirmation.blade.php
+@@ -1,7 +1,6 @@
+ @extends('layouts.alternative')
+ 
+ @section('content')
+-<script src="https://pay.yandex.ru/sdk/v1/pay.js" onload="onYaPayLoad()" async> </script>
+ <div class="container-fluid">
+     <div class="row justify-content-center">
+         <div class="col-md-8">
+@@ -115,10 +114,20 @@
+                                 <p id="error_message">Ошибка при вводе данных</p>
+                             </div>    
+                             <div class="col-md-12 text-center">
+-                                <p>1 рубль</p>
++                                <p>100 рублей</p>
++                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">
++                                    Оплатить
++                                </button>
+                             </div>    
+                             <div class="col-md-12 text-center">
+-                                <div id="button_container"></div>
++                                @component('components.payment-modal', [
++                                    'type' => 'registration',
++                                    'id' => 1,
++                                    'title' => 'Регистрация юридического лица',
++                                    'image' => '',
++                                    'price' => 100
++                                ])
++                                @endcomponent
+                             </div>
+                         </div>
+                     </form>
+@@ -437,110 +446,35 @@ document.addEventListener('DOMContentLoaded', function() {
+             suggestionsContainer.style.display = 'none';
+         }
+     });
+-});
+-</script>
+-<script>
++
++    const paymentButton = document.querySelector('[data-bs-target="#paymentModal"]');
+     
+-function onYaPayLoad() {
+-    const YaPay = window.YaPay;
+-
+-    // Payment data
+-    const paymentData = {
+-        env: YaPay.PaymentEnv.Sandbox,
+-        version: 4,
+-        currencyCode: YaPay.CurrencyCode.Rub,
+-        merchantId: 'cc08ce31-8375-439d-86f1-1201533f53e7',
+-        totalAmount: 1,
+-        availablePaymentMethods: ['CARD'],
+-    };
+-
+-    function refuseSubmit($error_message, $error_element = []) {
+-        document.getElementById('error_container').style.display = 'block';
+-        document.getElementById('error_message').textContent = $error_message;
+-        $error_element.forEach(element => {
+-            let el = document.getElementById(element);
+-            el.classList.add('is-invalid');
+-        });
+-        throw new Error($error_message);
+-    }
+-
+-    async function onPayButtonClick() {
+-        try {
+-            const offer_id = 1; //offer ID 1 refers to initial offer of 1 ruble per month during startup period
+-            const url = '{{ route('process-membership-order') }}';
+-            //check if any "required" fields are empty
+-            const requiredFields = ['password', 'confirm_password', 'inn', 'company_name', 'contact_name', 'email', 'phone'];
+-            requiredFields.forEach(field => {
+-                if (document.getElementById(field).value === '') {
+-                    refuseSubmit(`Поле ${field} не может быть пустым`);
+-                }
+-            });
+-            if (document.getElementById('password').value !== document.getElementById('confirm_password').value) {
+-                refuseSubmit('Пароли не совпадают', ['password', 'confirm_password']);
++    paymentButton.addEventListener('click', function(e) {
++        const requiredFields = ['password', 'confirm_password', 'inn', 'company_name', 'contact_name', 'email', 'phone'];
++        let hasError = false;
++        
++        requiredFields.forEach(field => {
++            if (document.getElementById(field).value === '') {
++                showError(`Поле ${field} не может быть пустым`);
++                hasError = true;
+             }
+-            // Send request to your server to handle the Yandex Pay order creation
+-            const response = await fetch(url, {
+-                method: 'POST',
+-                headers: {
+-                    'Content-Type': 'application/json',
+-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+-                },
+-                body: JSON.stringify({
+-                    payment_provider: 'yandex',
+-                    payment_amount: 1,
+-                    order_type: 'membership',
+-                    inn: document.getElementById('inn').value,
+-                    company_name: document.getElementById('company_name').value,
+-                    name: document.getElementById('contact_name').value,
+-                    email: document.getElementById('email').value,
+-                    phone: document.getElementById('phone').value,
+-                    additional_phone: document.getElementById('additional_phone').value,
+-                    password: document.getElementById('password').value,
+-                    legal_address: document.getElementById('legal_address').value,
+-                    physical_address: document.getElementById('physical_address').value,
+-                    main_region: document.getElementById('main_region').value,
+-                    region_codes: document.getElementById('region-codes').value,
+-                    offer_id: offer_id,
+-                })
+-            });
++        });
+ 
+-            const data = await response.json();
++        if (document.getElementById('password').value !== document.getElementById('confirm_password').value) {
++            showError('Пароли не совпадают');
++            hasError = true;
++        }
+ 
+-            if (data.success) {
+-                // Return the payment URL from your server response
+-                return data.paymentUrl;
+-            } else {
+-                throw new Error('Failed to start membership');
+-            }
+-        } catch (error) {
+-            console.error('Error starting membership:', error);
+-            throw error;
++        if (hasError) {
++            e.preventDefault();
+         }
+-    }
++    });
+ 
+-    // Error handler for payment form opening
+-    function onFormOpenError(reason) {
+-        console.error(`Payment error — ${reason}`);
++    function showError(message) {
++        document.getElementById('error_container').style.display = 'block';
++        document.getElementById('error_message').textContent = message;
+     }
+-
+-    // Create Yandex Pay session
+-    YaPay.createSession(paymentData, {
+-        onPayButtonClick: onPayButtonClick,
+-        onFormOpenError: onFormOpenError,
+-    })
+-        .then(function (paymentSession) {
+-            // Mount the Yandex Pay button
+-            paymentSession.mountButton(document.querySelector('#button_container'), {
+-                type: YaPay.ButtonType.Pay,
+-                theme: YaPay.ButtonTheme.Black,
+-                width: YaPay.ButtonWidth.Max,
+-            });
+-            console.log('Payment session created successfully');
+-        })
+-        .catch(function (err) {
+-            console.error('Failed to create payment session:', err);
+-        });
+-}
++});
+ </script>
+ @endsection
+ 

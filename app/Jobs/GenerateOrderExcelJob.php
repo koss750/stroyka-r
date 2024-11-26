@@ -492,6 +492,7 @@ class GenerateOrderExcelJob implements ShouldQueue
                     if ($labour['labourAdditional']) {
                         $worksheet->setCellValue("C{$currentRow}", $labour['labourAdditionalTitle']);
                     }
+                    
                     $worksheet->setCellValue("D{$currentRow}", $labour['labourUnit']);
                     $worksheet->setCellValue("E{$currentRow}", $labour['labourQuantity']);
                     $worksheet->getCell("E{$currentRow}")->getStyle()->getNumberFormat()->setFormatCode($labour['labourFormat']);
@@ -517,7 +518,7 @@ class GenerateOrderExcelJob implements ShouldQueue
                         $worksheet->getRowDimension($currentRow)->setRowHeight(30);
                     }
                     
-                    if ($deliverySection) {
+                    if ((isset($section['lastSection']) && $section['lastSection']) || $deliverySection) {
                         $material['materialTotal'] = 0;
                         $material['materialPrice'] = 0;
                     }

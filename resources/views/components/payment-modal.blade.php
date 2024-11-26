@@ -38,6 +38,11 @@
             $label = "Стоимость сметы";
             $button_label = "Оплатить";
         }
+    } else if ($type === 'registration') {
+        $order_type = 'registration';
+        $modal_id = "paymentModal";
+        $label = "Оплата регистрации";
+        $button_label = "Оплатить";
     }
 @endphp
 
@@ -53,22 +58,31 @@
                     <div class="col-md-5">
                         <form id="{{ $modal_id }}_paymentForm">
                             @guest
-                                <div class="form-group">
-                                    <label for="name">Имя:</label>
-                                    <input type="text" class="form-control" id="name" name="name" required>
+                                @if ($order_type != 'registration')
+                                <div id="registration-warning" class="alert alert-info">
+                                    <p>Для доступа к нашим услугам необходимо зарегистрироваться, заполнив свои данные на этой странице.</p>
+                                    <button type="button" class="btn btn-primary mt-2" id="acceptRegistration">Согласен</button>
                                 </div>
-                                <div class="form-group">
-                                    <label for="email">Email:</label>
-                                    <input type="email" class="form-control no-text-transform" id="email" name="email" required>
+                                
+                                <div id="registration-form" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="name">Имя:</label>
+                                        <input type="text" class="form-control" id="name" name="name" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Email:</label>
+                                        <input type="email" class="form-control no-text-transform" id="email" name="email" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone">Телефон:</label>
+                                        <input type="tel" class="form-control" id="phone" name="phone" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="password">Создать пароль:</label>
+                                        <input type="text" class="form-control" id="password" name="password" required>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="phone">Телефон:</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" required>
-                                </div>
-                                <div class="form-group">
-                                    <label for="password">Создать пароль:</label>
-                                    <input type="text" class="form-control" id="password" name="password" required>
-                                </div>
+                                @endif
                             @endguest
                             @if ($price > 0 && $order_type == 'design')
                             <div class="form-group">
@@ -213,16 +227,38 @@
                     const cellIndex = input.getAttribute('data-excel-cell');
                     let cellValue;
 
-                    if ({{ $price }} === 0) {
-                        // For example/free orders, use placeholder values
-                        cellValue = input.placeholder || '';
-                    } else {
-                        // For paid orders, use actual input values
+                    if (input.tagName.toLowerCase() === 'select') {
+                        // For select elements, get the selected option's value
                         cellValue = input.value || '';
+                    } else {
+                        // For other input types, use existing logic
+                        if ({{ $price }} === 0) {
+                            cellValue = input.placeholder || '';
+                        } else {
+                            cellValue = input.value || '';
+                        }
                     }
+                    
                     orderData.foundation_id = '{{ $id }}';
                     orderData.foundation_data[cellIndex] = cellValue;
                 });
+            } else if ('{{ $type }}' === 'registration') {
+                const registrationForm = document.getElementById('legal-entity-form');
+                orderData = {
+                    inn: document.getElementById('inn').value,
+                    company_name: document.getElementById('company_name').value,
+                    kpp: document.getElementById('kpp').value,
+                    ogrn: document.getElementById('ogrn').value,
+                    legal_address: document.getElementById('legal_address').value,
+                    physical_address: document.getElementById('physical_address').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    additional_phone: document.getElementById('additional_phone').value,
+                    contact_name: document.getElementById('contact_name').value,
+                    password: document.getElementById('password').value,
+                    main_region: document.getElementById('main_region').value,
+                    region_codes: document.getElementById('region-codes').value,
+                };
             } else {
                 // Design order specific data
                 orderData.design_id = '{{ $id }}';
@@ -302,6 +338,25 @@
         function hideLoading(button) {
             button.disabled = false;
             button.innerHTML = button.getAttribute('data-original-text');
+        }
+
+        const acceptButton = document.getElementById('acceptRegistration');
+        const registrationForm = document.getElementById('registration-form');
+        const registrationWarning = document.getElementById('registration-warning');
+        const submitButton = document.querySelector('button[type="submit"]');
+
+        if (submitButton) {
+            submitButton.style.display = 'none';
+        }
+
+        if (acceptButton) {
+            acceptButton.addEventListener('click', function() {
+                registrationForm.style.display = 'block';
+                registrationWarning.style.display = 'none';
+                if (submitButton) {
+                    submitButton.style.display = 'block';
+                }
+            });
         }
     });
 </script>

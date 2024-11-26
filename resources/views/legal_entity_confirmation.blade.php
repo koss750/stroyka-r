@@ -1,7 +1,6 @@
 @extends('layouts.alternative')
 
 @section('content')
-<script src="https://pay.yandex.ru/sdk/v1/pay.js" onload="onYaPayLoad()" async> </script>
 <div class="container-fluid">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -115,10 +114,20 @@
                                 <p id="error_message">Ошибка при вводе данных</p>
                             </div>    
                             <div class="col-md-12 text-center">
-                                <p>1 рубль</p>
+                                <p>100 рублей</p>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                                    Оплатить
+                                </button>
                             </div>    
                             <div class="col-md-12 text-center">
-                                <div id="button_container"></div>
+                                @component('components.payment-modal', [
+                                    'type' => 'registration',
+                                    'id' => 1,
+                                    'title' => 'Регистрация юридического лица',
+                                    'image' => '',
+                                    'price' => 100
+                                ])
+                                @endcomponent
                             </div>
                         </div>
                     </form>
@@ -437,110 +446,35 @@ document.addEventListener('DOMContentLoaded', function() {
             suggestionsContainer.style.display = 'none';
         }
     });
-});
-</script>
-<script>
+
+    const paymentButton = document.querySelector('[data-bs-target="#paymentModal"]');
     
-function onYaPayLoad() {
-    const YaPay = window.YaPay;
-
-    // Payment data
-    const paymentData = {
-        env: YaPay.PaymentEnv.Sandbox,
-        version: 4,
-        currencyCode: YaPay.CurrencyCode.Rub,
-        merchantId: 'cc08ce31-8375-439d-86f1-1201533f53e7',
-        totalAmount: 1,
-        availablePaymentMethods: ['CARD'],
-    };
-
-    function refuseSubmit($error_message, $error_element = []) {
-        document.getElementById('error_container').style.display = 'block';
-        document.getElementById('error_message').textContent = $error_message;
-        $error_element.forEach(element => {
-            let el = document.getElementById(element);
-            el.classList.add('is-invalid');
+    paymentButton.addEventListener('click', function(e) {
+        const requiredFields = ['password', 'confirm_password', 'inn', 'company_name', 'contact_name', 'email', 'phone'];
+        let hasError = false;
+        
+        requiredFields.forEach(field => {
+            if (document.getElementById(field).value === '') {
+                showError(`Поле ${field} не может быть пустым`);
+                hasError = true;
+            }
         });
-        throw new Error($error_message);
-    }
 
-    async function onPayButtonClick() {
-        try {
-            const offer_id = 1; //offer ID 1 refers to initial offer of 1 ruble per month during startup period
-            const url = '{{ route('process-membership-order') }}';
-            //check if any "required" fields are empty
-            const requiredFields = ['password', 'confirm_password', 'inn', 'company_name', 'contact_name', 'email', 'phone'];
-            requiredFields.forEach(field => {
-                if (document.getElementById(field).value === '') {
-                    refuseSubmit(`Поле ${field} не может быть пустым`);
-                }
-            });
-            if (document.getElementById('password').value !== document.getElementById('confirm_password').value) {
-                refuseSubmit('Пароли не совпадают', ['password', 'confirm_password']);
-            }
-            // Send request to your server to handle the Yandex Pay order creation
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    payment_provider: 'yandex',
-                    payment_amount: 1,
-                    order_type: 'membership',
-                    inn: document.getElementById('inn').value,
-                    company_name: document.getElementById('company_name').value,
-                    name: document.getElementById('contact_name').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phone').value,
-                    additional_phone: document.getElementById('additional_phone').value,
-                    password: document.getElementById('password').value,
-                    legal_address: document.getElementById('legal_address').value,
-                    physical_address: document.getElementById('physical_address').value,
-                    main_region: document.getElementById('main_region').value,
-                    region_codes: document.getElementById('region-codes').value,
-                    offer_id: offer_id,
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                // Return the payment URL from your server response
-                return data.paymentUrl;
-            } else {
-                throw new Error('Failed to start membership');
-            }
-        } catch (error) {
-            console.error('Error starting membership:', error);
-            throw error;
+        if (document.getElementById('password').value !== document.getElementById('confirm_password').value) {
+            showError('Пароли не совпадают');
+            hasError = true;
         }
-    }
 
-    // Error handler for payment form opening
-    function onFormOpenError(reason) {
-        console.error(`Payment error — ${reason}`);
-    }
+        if (hasError) {
+            e.preventDefault();
+        }
+    });
 
-    // Create Yandex Pay session
-    YaPay.createSession(paymentData, {
-        onPayButtonClick: onPayButtonClick,
-        onFormOpenError: onFormOpenError,
-    })
-        .then(function (paymentSession) {
-            // Mount the Yandex Pay button
-            paymentSession.mountButton(document.querySelector('#button_container'), {
-                type: YaPay.ButtonType.Pay,
-                theme: YaPay.ButtonTheme.Black,
-                width: YaPay.ButtonWidth.Max,
-            });
-            console.log('Payment session created successfully');
-        })
-        .catch(function (err) {
-            console.error('Failed to create payment session:', err);
-        });
-}
+    function showError(message) {
+        document.getElementById('error_container').style.display = 'block';
+        document.getElementById('error_message').textContent = message;
+    }
+});
 </script>
 @endsection
 

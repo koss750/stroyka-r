@@ -198,6 +198,9 @@ class FoundationOrderFileJob implements ShouldQueue
                 $quantity = $this->formatNumber($this->getCellValue($sheet, $labourItem['labourQuantityCell']), $decimalPlaces);
                 $price = $this->formatNumber($this->getCellValue($sheet, $labourItem['labourPriceCell']), 2); // Always 2 decimals for prices
 
+                if ($labourItem['labourAdditional']) {
+                    $labourItem['labourAdditionalTitle'] = $this->getCellValue($sheet, $labourItem['labourAdditionalTitleCell']);
+                }
                 $labourItem['labourQuantity'] = $quantity;
                 $labourItem['labourPrice'] = $price;
                 $labourItem['labourTotal'] = $this->formatNumber($this->getCellValue($sheet, $labourItem['labourTotalCell']), 2); // Always 2 decimals for totals
@@ -311,7 +314,7 @@ class FoundationOrderFileJob implements ShouldQueue
 
         if ($foundationParams['sheet_structure']['hasDynamicSwaps']) {
             foreach ($foundationParams['sheet_structure']['dynamicSwaps'] as $key => $cell) {
-                
+                //dd ($key, $cell, $this->getCellValue($sheet, $cell));
                 if (is_array($cell)) {
                     foreach ($cell as $subKey => $subCell) {
                         $foundationParams['sheet_structure']['dynamicSwaps'][$key][$subKey] = ($this->getCellValue($sheet, $subCell));
@@ -325,7 +328,8 @@ class FoundationOrderFileJob implements ShouldQueue
                 
             }
             if ($foundationParams['sheet_structure']['hasTitleSwaps']) {
-                $foundationParams['sheet_structure']['title'];
+                //$foundationParams['sheet_structure']['title'];
+                //dd($foundationParams['sheet_structure']['dynamicSwaps']);
                 foreach ($foundationParams['sheet_structure']['dynamicSwaps'] as $key => $value) {
                     if (strpos($foundationParams['sheet_structure']['title'], $key) !== false) {
                         $foundationParams['sheet_structure']['title'] = str_replace($key, $value, $foundationParams['sheet_structure']['title']);
