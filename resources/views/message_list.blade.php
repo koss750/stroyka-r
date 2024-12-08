@@ -4,15 +4,67 @@
 
 @section('additional_head')
 <title>Мои переписки</title>
+<meta name="description" content="Мои переписки на портале Стройка.com. Здесь вы можете просматривать и управлять своими переписками с заказчиками и строителями.">
 @endsection
 
 @section('content')
 <script>
 let currentUserId = null;
+let existingConversations = new Set();
 
 $(document).ready(function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const supplierUserId = urlParams.get('supplier_id');
+    
+    if (supplierUserId) {
+        try {
+            ym(97430601,'reachGoal','legal_contant');
+            console.log('Yandex Metrika reached');
+        } catch (error) {
+            console.error('Yandex Metrika error:', error);
+        }
+        
+        // Wait for the modal to be fully initialized
+        $('#composeMessageModal').on('shown.bs.modal', function() {
+            // Get supplier details and open compose modal
+            $.get(`/api/users/${supplierUserId}`, function(data) {
+                console.log('Modal shown, data received:', data);
+                if (data.user) {
+                    console.log('data.user', data.user);
+                    // Add the supplier to the recipient dropdown if not already present
+                    if (!existingConversations.has(parseInt(supplierUserId))) {
+                        console.log('Adding supplier to recipient dropdown');
+                        // Create a new option element properly
+                        const option = document.createElement('option');
+                        option.value = supplierUserId;
+                        option.textContent = data.user.name;
+                        
+                        // Get the recipient select element
+                        const recipientSelect = document.getElementById('recipient');
+                        if (recipientSelect) {
+                            // Remove any existing option with the same value
+                            const existingOption = recipientSelect.querySelector(`option[value="${supplierUserId}"]`);
+                            if (existingOption) {
+                                existingOption.remove();
+                            }
+                            
+                            recipientSelect.appendChild(option);
+                            recipientSelect.value = supplierUserId; // Set the selection
+                            console.log('Added and selected supplier:', supplierUserId);
+                        } else {
+                            console.error('Recipient select element not found');
+                        }
+                        $('#composeMessageModal').modal('show');
+                    }
+                }
+            });
+        });
+        
+        // Show the modal
+        
+    }
+
     let currentUserId = {{ Auth::id() }};
-    const existingConversations = new Set();
     // Populate existing conversations in the recipient select
     @foreach($messages as $userId => $conversation)
         userId = {{ $userId }};
@@ -90,6 +142,11 @@ $(document).ready(function() {
                     // Provide a fallback for sender_name
                     const senderName = message.sender_name || 'Неизвестный отправитель';
                     
+                    let subjectHtml = '';
+                    if (message.subject) {
+                        subjectHtml = `<div class="message-subject"><strong>${message.subject}</strong></div>`;
+                    }
+
                     let projectInfo = '';
                     if (message.project) {
                         projectInfo = `
@@ -110,9 +167,10 @@ $(document).ready(function() {
 
                     messagesHtml += `
                         <div class="message ${messageClass} ${supportClass}" data-message-id="${message.id}" data-timestamp="${message.created_at}">
+                            ${subjectHtml}
                             ${projectInfo}
                             <p>${message.content}</p>
-                            <small>${new Date(message.created_at).toLocaleTimeString()} ${supportIcon}</small>
+                            <small class="message-timestamp">${message.created_at} ${supportIcon}</small>
                         </div>
                     `;
 
@@ -230,43 +288,40 @@ $(document).ready(function() {
     });
 
     $('#sendMessageBtn').on('click', function() {
-        const recipientId = $('#recipient').val();
+        const receiverId = $('#recipient').val();
         const subject = $('#subject').val();
         const content = $('#messageBody').val();
 
-        if (!recipientId || !content) {
+        if (!receiverId || !content) {
             alert('Пожалуйста, заполните все обязательные поля');
             return;
         }
 
-        sendMessage(recipientId, content, subject);
-        $('#composeMessageModal').modal('hide');
-    });
+        const formData = new FormData();
+        formData.append('receiver_id', receiverId);
+        formData.append('content', content);
+        formData.append('subject', subject);
+        formData.append('_token', '{{ csrf_token() }}');
 
-    // Modify the sendMessage function to scroll to bottom after sending a message
-    function sendMessage(recipientId, content, subject = null) {
-        console.log('Sending message to route:', '/messages');
-        console.log('Recipient ID:', recipientId);
         $.ajax({
             url: '/messages',
             method: 'POST',
-            data: {
-                receiver_id: recipientId,
-                content: content,
-                subject: subject,
-                _token: '{{ csrf_token() }}'
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                $('#composeMessageModal').modal('hide');
+                $('#recipient').val('');
+                $('#subject').val('');
+                $('#messageBody').val('');
+                loadConversation(receiverId);
             },
-            success: function(data) {
-                $('#message-input').val('');
-                loadConversation(recipientId);
-                // Add this line to scroll to the bottom after sending a message
-                scrollChatToBottom();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Error sending message:", textStatus, errorThrown);
+            error: function(error) {
+                console.error('Error sending message:', error);
+                alert('Произошла ошибка при отправке сообщения');
             }
         });
-    }
+    });
 
     function sendMessageForm() {
         if (!currentUserId) {
@@ -314,7 +369,7 @@ $(document).ready(function() {
                 if (message.project) {
                     projectInfo = `
                         <div class="project-info">
-                            <strong>${senderName} хотел направить вам сообщение о смете проекта <a href="${message.project.link}" target="_blank">${message.project.title}</a> </strong>
+                            <strong>${senderName} хотел направить вам сообщение о смете поекта <a href="${message.project.link}" target="_blank">${message.project.title}</a> </strong>
                             <br>
                             
                             <strong>Скачать смету: <a href="${message.project.filepath}" download></strong>
@@ -436,8 +491,14 @@ $(document).ready(function() {
 
     function updateUnreadCount() {
         $.get('/messages/unread-count', function(data) {
-            $('#unread-count').text(data.count);
-            if (data.count > 0) {
+            const unreadCount = $('#AllMessage .message-row').filter(function() {
+                // Only count messages where the user is the recipient and they're unread
+                return $(this).find('.unread-dot').length > 0 && 
+                       $(this).data('sender-id') != 11; // 11 is the current user ID
+            }).length;
+            
+            $('#unread-count').text(unreadCount);
+            if (unreadCount > 0) {
                 $('#unread-count').show();
             } else {
                 $('#unread-count').hide();
@@ -471,10 +532,41 @@ $(document).ready(function() {
     });
 
     // Automatically open the newest conversation
-    const $newestConversation = $('.message-row').first();
-    if ($newestConversation.length) {
-        $newestConversation.click();
+    
+    const newestConversation = document.querySelector('.message-row');
+    let relevantConversation = newestConversation;
+    // If there's a supplier_id in the URL, open that conversation instead
+    if (supplierUserId) {
+        relevantConversation = document.querySelector(`.message-row[data-user-id="${supplierUserId}"]`);
+        relevantConversation.click();
+    } else {
+        newestConversation.click();
     }
+
+    // Add this function to populate the recipient dropdown
+    function populateRecipientDropdown() {
+        const recipientSelect = $('#recipient');
+        
+        // Keep the support option
+        const supportOption = recipientSelect.find('option[value="7"]');
+        recipientSelect.empty().append(supportOption);
+
+        // Add other users from the message list
+        $('.message-row').each(function() {
+            const userId = $(this).data('user-id');
+            const userName = $(this).find('h6').text().trim();
+            
+            // Skip if option already exists or if it's the current user
+            if (userId != {{ Auth::id() }} && !recipientSelect.find(`option[value="${userId}"]`).length) {
+                recipientSelect.append(new Option(userName, userId));
+            }
+        });
+    }
+
+    // Call this function after loading conversations and when opening the compose modal
+    $('#composeMessageModal').on('show.bs.modal', function() {
+        populateRecipientDropdown();
+    });
 });
 </script>
 <div class="container-fluid">
@@ -521,10 +613,12 @@ $(document).ready(function() {
                                         <div class="d-flex w-100 justify-content-between align-items-center">
                                             <div class="d-flex align-items-center">
                                                 @if(!$conversation['is_read'])
-                                                    <span class="unread-dot me-2" data-message-id="{{ $conversation['last_message_id'] }}"></span>
+                                                    <span  data-message-id="{{ $conversation['last_message_id'] }}">
+                                                        <i class="fas fa-envelope" style="color: #ff0000; margin-right: 5px;"></i>
+                                                    </span>
                                                 @endif
                                                 <h6 class="mb-1 d-flex align-items-center">
-                                                    {{ $conversation['user']->name }}
+                                                    {{ $conversation['sender_name'] }}
                                                     @if($userId == 7)
                                                         <i class="fas fa-headset ms-1 text-primary" title="Тех поддержка"></i>
                                                     @endif
@@ -693,6 +787,31 @@ $(document).ready(function() {
     .attachment-image {
         max-width: 50%;
         max-height: 50%;
+    }
+
+    .message-subject {
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .message.received .message-subject {
+        border-bottom-color: rgba(0,0,0,0.1);
+    }
+
+    .message.sent .message-subject {
+        border-bottom-color: rgba(255,255,255,0.2);
+    }
+
+    .message-timestamp {
+        display: inline-block;
+        color: rgba(0, 0, 0, 0.5);
+        font-size: 0.8em;
+        margin-top: 4px;
+    }
+
+    .message.sent .message-timestamp {
+        color: rgba(255, 255, 255, 0.7);
     }
 </style>
 @endpush

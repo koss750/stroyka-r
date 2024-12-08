@@ -9,6 +9,7 @@ use App\Http\Controllers\InvoiceController as Invoice;
 use App\Models\FormField;
 use App\Models\Foundation;
 use App\Models\PricePlan;
+use Illuminate\Support\Facades\Log;
 //use Illuminate\Support\Facades\Redis;
 
 class UIController extends Controller
@@ -30,7 +31,9 @@ class UIController extends Controller
         $pricePlan = PricePlan::where('id', 7)->firstOrFail();
         $prices = $pricePlan->parameter_option;
         foreach ($prices as $price) {
+            Log::info('price value: ' . $price['value'] . ' foundation title: ' . $foundation_title);
             if ($price['value'] == $foundation_title) {
+                Log::info('price found: ' . $price['price']);
                 return $price['price'];
             }
         }

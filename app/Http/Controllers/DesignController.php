@@ -381,7 +381,11 @@ $html .= '<thead class="thead-dark">';
                 $categoryDesigns = Design::where('category', 'LIKE', '%"category":"' . $category . '"%')
                         ->where('active', 1)
                     ->get()
-                    ->sortBy('size')
+                    ->when(in_array($category_group, ['doma_iz_brusa', 'doma_iz_brevna']), function($collection) {
+                        return $collection->sortByDesc('size');
+                    }, function($collection) {
+                        return $collection->sortBy('size');
+                    })
                     ->map(function ($design) {
                         $design->rating = 5;
                         $design->reviewCount = 10;
@@ -390,11 +394,9 @@ $html .= '<thead class="thead-dark">';
     
                 $designs = $designs->concat($categoryDesigns);
             }
-            foreach ($designs as $design) {
-                if ($design->hide) {
-                    $designs->forget($design);
-                }
-            }
+            $designs = $designs->filter(function($design) {
+                return $design->price != "99,999.00";
+            });
             return $designs->flatten();
         });
 
@@ -545,6 +547,7 @@ private function getPriceFromDb($id, $invoice_type_id)
         $projects = Project::where(function($query) use ($user) {
                         $query->where('user_id', $user ? $user->id : null);
                     })
+                    ->where('order_type', '!=', 'registration')
                     ->with(['design', 'executor'])
                     ->orderBy('created_at', 'desc')
                     ->get()

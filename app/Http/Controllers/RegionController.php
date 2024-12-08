@@ -40,14 +40,20 @@ class RegionController extends Controller
     // Add this new method
     public function getAllRegions()
     {
-        $regions = Region::select('name', 'code')->get();
+        $regions = Region::select('name', 'id', 'code')->get();
+        foreach ($regions as $region) {
+            $region->code = $region->id;
+        }
         return response()->json($regions);
     }
 
     // Add this new method
     public function index()
     {
-        $regions = Region::select('name', 'code')->get();
+        $regions = Region::select('name', 'id', 'code')->get();
+        foreach ($regions as $region) {
+            $region->code = $region->id;
+        }
         return response()->json($regions);
     }
 }

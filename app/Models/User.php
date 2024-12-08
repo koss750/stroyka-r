@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Musonza\Chat\Traits\Messageable;
 use Carbon\Carbon;
 use App\Models\Supplier;
 use App\Notifications\ResetPassword as ResetPasswordNotification;
@@ -16,7 +15,6 @@ use App\Notifications\ResetPassword as ResetPasswordNotification;
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-    use Messageable;
 
     /**
      * The attributes that are mass assignable.
@@ -180,6 +178,35 @@ class User extends Authenticatable
     public function companyProfile()
     {
         return $this->hasOne(CompanyProfile::class);
+    }
+
+    /**
+     * Get all messages for the user
+     */
+    public function messages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id')
+            ->orWhere('sender_id', $this->id);
+    }
+
+    /**
+     * Get unread messages for the user
+     */
+    public function unreadMessages()
+    {
+        return $this->hasMany(Message::class, 'receiver_id')
+            ->where('is_read', false)
+            ->where('sender_id', '!=', $this->id);
+    }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function setAllMessagesRead()
+    {
+        $this->messages()->update(['is_read' => true]);
     }
 
 }

@@ -60,3 +60,22 @@ Route::post('subscriptions/create-for-entity', [SubscriptionController::class, '
 // Tinkoff
 Route::post('tinkoff/init', [OrderController::class, 'initOrder']);
 Route::post('tinkoff/callback', [OrderController::class, 'tinkoffPayCallback']);
+
+// Auth
+Route::post('register-supplier', [RegisterController::class, 'createSupplier'])->name('register-supplier');
+
+
+// Messages
+Route::get('/users/{id}', function ($id) {
+    $user = \App\Models\User::find($id);
+    if ($user) {
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->supplier ? $user->supplier->company_name : $user->name
+            ]
+        ]);
+    }
+    return response()->json(['success' => false]);
+});

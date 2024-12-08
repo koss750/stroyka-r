@@ -15,11 +15,13 @@ class FeedbackMail extends Notification
     protected $name;
     protected $email;
     protected $message;
+    protected $phone;
 
-    public function __construct($name, $email, $message)
+    public function __construct($name, $phone, $email, $message)
     {
         $this->name = $name;
-        $this->email = $email;
+        $this->phone = $phone ?? '';
+        $this->email = $email ?? '';
         $this->message = $message;
     }
 
@@ -34,6 +36,7 @@ class FeedbackMail extends Notification
             ->subject('Запрос с сайта')
             ->line('Имя: ' . $this->name)
             ->line('Email: ' . $this->email)
+            ->line('Телефон: ' . $this->phone)
             ->line('Сообщение: ' . $this->message);
     }
 }

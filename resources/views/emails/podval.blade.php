@@ -7,7 +7,9 @@
             <div class="col-sm-8">
                 <ul>
                     <li class="footer-email-item"><a href="{{ route('terms.and.conditions') }}">Политика конфиденциальности</a></li>
-                    <li class="footer-email-item"><a href="{{ route('fiscal.receipt', $project['payment_reference']) }}">Фискальный чек</a></li>
+                    @if (isset($project))
+                        <li class="footer-email-item"><a href="{{ route('fiscal.receipt', $project['payment_reference']) }}">Фискальный чек</a></li>
+                    @endif
                     <li class="footer-email-item"><a href="{{ route('terms.and.conditions') }}">Условия использования</a></li>
                 </ul>
             </div>

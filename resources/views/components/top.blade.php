@@ -26,9 +26,25 @@
                             <li><a href="../login" class="login-btn">Войти</a></li>
                         @endguest
                         @auth
-                            <li class="dropdown">
-                                <a href="/my-account" class="dropdown-toggle">Личный Кабинет</a>
-                                <div class="dropdown-menu">
+                            <li class="nav-item dropdown">
+                                <!-- Desktop Menu -->
+                                <a href="#" class="nav-link dropdown-toggle desktop-menu" data-bs-toggle="dropdown" role="button" aria-expanded="false">
+                                    Меню
+                                    @if(auth()->user()->unreadMessages()->count() > 0)
+                                        <span class="message-badge">{{ auth()->user()->unreadMessages()->count() }}</span>
+                                    @endif
+                                </a>
+                                <!-- Mobile and Desktop Dropdown -->
+                                <div class="dropdown-menu mobile-dropdown">
+                                    <a class="dropdown-item" href="/my-orders" style="text-transform: none;">Мои заказы</a>
+                                    <a class="dropdown-item" href="/suppliers" style="text-transform: none;">Строители</a>
+                                    <a class="dropdown-item" href="/messages" style="text-transform: none;">
+                                        Сообщения
+                                        @if(auth()->user()->unreadMessages()->count() > 0)
+                                            <span class="message-badge">{{ auth()->user()->unreadMessages()->count() }}</span>
+                                        @endif
+                                    </a>
+                                    <a class="dropdown-item" href="/profile" style="text-transform: none;">Мои данные</a>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
                                         <button type="submit" class="dropdown-item">Выйти</button>
@@ -94,7 +110,7 @@
                 <div class="alert alert-info mb-4" role="alert">
                     <h4 class="alert-heading">Важное уведомление:</h4>
                     <p>Вас приветствует уникальный строительный информационный ресурс Стройка.com</p>
-                    <p>У нас вы можете в режиме онлайн получить смету любого понравившегося вам дома или бани с ресурса и одним кликом разослать запрос на строительство в десятки строительных компаний – партнеров ресурса.</p>
+                    <p>У нас вы можете в режиме онлайн получить смету любого понравившегося вам дома или бани с ресурса и одним кликом разослать запрос на строительство в строительные компании – партнер ресурса.</p>
                     <p>Та компания что предложит вам оптимальные условия и станет воплощать вашу мечту в жизнь!</p>
                 </div>
                 <form id="signup-form-individual">
@@ -106,15 +122,23 @@
                         <label for="individual-email">E-mail</label>
                         <input type="email" class="form-control no-text-transform" id="individual-email" name="email" required>
                     </div>
-                    <div class="input-group">
-                        <input type="password" class="form-control" id="individual-password" name="password" required>
-                        <span class="input-group-text toggle-password" data-target="#individual-password">
-                            <i class="fas fa-eye"></i>
-                        </span>
+                    <div class="form-group">    
+                        <label for="individual-password">Пароль</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control no-text-transform" id="individual-password" name="password" required>
+                            <span class="input-group-text toggle-password" data-target="#individual-password">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group">    
                         <label for="individual-password-confirmation">Подтвердите пароль</label>
-                        <input type="password" class="form-control" id="individual-password-confirmation" name="password_confirmation" required>
+                        <div class="input-group">   
+                            <input type="password" class="form-control no-text-transform" id="individual-password-confirmation" name="password_confirmation" required>
+                            <span class="input-group-text toggle-password" data-target="#individual-password-confirmation">
+                                <i class="fas fa-eye"></i>
+                            </span>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="individual-region-select">Регион</label>
@@ -129,9 +153,28 @@
             <div class="tab-pane fade" id="legal" role="tabpanel" aria-labelledby="legal-tab">
                 <form id="signup-form-legal">
                     <div class="form-group">
-                        <label for="inn">ИНН</label>
+                        <label for="country">Страна</label>
+                        <select class="form-control" id="country" name="country" required>
+                            <option value="Россия">Россия</option>
+                            <option value="Азербайджан" disabled>Азербайджан (скоро будет)</option>
+                            <option value="Армения" disabled>Армения (скоро будет)</option>
+                            <option value="Беларусь" disabled>Беларусь (скоро будет)</option>
+                            <option value="Казахстан" disabled>Казахстан (скоро будет)</option>
+                            <option value="Кыргызстан" disabled>Кыргызстан (скоро будет)</option>
+                            <option value="Молдова" disabled>Молдова (скоро будет)</option>
+                            <option value="Таджикистан" disabled>Таджикистан (скоро будет)</option>
+                            <option value="Туркменистан" disabled>Туркменистан (скоро будет)</option>
+                            <option value="Узбекистан" disabled>Узбекистан (скоро будет)</option>
+                            
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="inn" id="tax-id-label">ИНН</label>
                         <input type="text" class="form-control" id="inn" name="inn" required>
                         <button type="button" id="check-inn" class="btn btn-secondary mt-2">Проверить</button>
+                    </div>
+                    <div id="company-error" style="display: none;">
+                        <small class="text-danger">Этот ИНН уже зарегистрирован в системе или некорректен</small>
                     </div>
                     <div id="company-confirmation" style="display: none;">
                         <p>Найдена компания: <span id="found-company-name"></span></p>
@@ -384,12 +427,14 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Произошла ошибка при отправке формы');
         });
     }
+    const companyError = document.getElementById('company-error');
     function checkInn() {
         if (!{{ config('app.allow_legal_registration') ? 'true' : 'false' }}) {
             alert('Регистрация юр лиц сейчас недоступна');
             return;
         }
         const inn = innInput.value.trim();
+        companyError.style.display = 'none';
         if (inn === lastCheckedInn) return;
         lastCheckedInn = inn;
 
@@ -404,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     isCompanyActive = data.is_active;
                 } else {
                     companyFormData = null;
-                    alert('Компания не найдена или произошла ошибка при проверке ИНН');
+                    companyError.style.display = 'block';
                 }
             })
             .catch(error => {
@@ -511,7 +556,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="tel" class="form-control" id="phone" name="phone" required>
             </div>
             <div class="form-group">
-                <label for="additional_phone">Второй контактный номер тел.</label>
+                <label for="additional_phone">Второй онтактный номер тел.</label>
                 <input type="text" class="form-control" id="additional_phone" name="additional_phone" required>
             </div>
             <div class="form-group">
@@ -586,7 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const label = document.createElement('label');
                 label.htmlFor = `region-${region.code}`;
-                label.textContent = `${region.name} (${region.code})`;
+                label.textContent = `${region.name}`;
 
                 div.appendChild(checkbox);
                 div.appendChild(label);
@@ -635,6 +680,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
         displayAllRegions();
     }
+
+    const dropdownToggle = document.querySelector('.nav-item.dropdown > a');
+
+    if (mobileToggle && dropdownToggle) {
+        mobileToggle.addEventListener('click', function() {
+            dropdownToggle.click();
+        });
+    }
+
+    const mobileDropdown = document.querySelector('.mobile-dropdown');
+    
+    if (mobileToggle && mobileDropdown) {
+        mobileToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            mobileDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!mobileDropdown.contains(e.target) && !mobileToggle.contains(e.target)) {
+                mobileDropdown.classList.remove('show');
+            }
+        });
+    }
+
+    // Define tax ID labels for different countries
+    const countryTaxIds = {
+        'Россия': 'ИНН',
+        'Беларусь': 'УНП', // Учетный номер плательщика
+        'Казахстан': 'БИН/ИИН', // Бизнес-идентификационный номер/Индивидуальный идентификационный номер
+        'Кыргызстан': 'ИНН',
+        'Узбекистан': 'ИНН',
+        'Армения': 'УНН', // Учетный номер налогоплательщика
+        'Азербайджан': 'VÖEN', // ВОЕН - Vergi Ödəyicisinin Eyniləşdirmə Nömrəsi
+        'Молдова': 'IDNO', // Государственный идентификационный номер
+        'Таджикистан': 'ИНН',
+        'Туркменистан': 'УНК' // Учетный номер клиента
+    };
+
+    // Add event listener to country select
+    document.getElementById('country').addEventListener('change', function() {
+        const selectedCountry = this.value;
+        const taxIdLabel = countryTaxIds[selectedCountry] || 'ИНН';
+        document.querySelector('label[for="inn"]').textContent = taxIdLabel;
+    });
 });
 </script>
 <style>
@@ -651,5 +741,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .input-group-text i {
         font-size: 1.2em;
+    }
+
+    .message-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        background-color: #ff4444;
+        color: white;
+        border-radius: 50%;
+        font-size: 11px;
+        position: relative;
+        top: -2px;
+        margin-left: 5px;
+        font-weight: bold;
+    }
+
+    .dropdown-item .message-badge {
+        float: right;
+        top: 2px;
+    }
+
+    @media (max-width: 768px) {
+        .message-badge {
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+        }
     }
 </style>

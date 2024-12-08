@@ -9,13 +9,14 @@
                     <h2 class="text-center mb-4">Подтверждение регистрации юридического лица</h2>
                     
                     <div class="alert alert-info" role="alert">
-                        <h4 class="alert-heading">Важное уведомление:</h4>
+                        <h4 class="alert-heading">Важное уведомление!</h4>
                         <p>Вас приветствует уникальный информационный ресурс для коммуникации потребителей рынка малоэтажного деревянного домостроения и компаний подрядчиков!</p>
                         <p>В интересах обеспечения качества и безопасности производится регистрация и проверка юридических лиц.</p>
-                        <p>Информационная платформа является платной. После регистрации в течении первых 30 календарных дней, действуют особые правила подписки. Стоимость услуги составляет всего 500 рублей.</p>
+                        <p>Мы предлагаем специальную промо-цену на подписку - всего 1 рубль. Обращаем ваше внимание! После достижения определенного количества обращений к компаниям от наших пользователей, стоимость подписки будет пересмотрена.</p>
                         <p>Подписка дает право размещения в реестре исполнителей, список исполнителей выдается клиентам вместе со сметой, приобретаемой ими на нашем ресурсе.</p>
+                        <p>Все оформленные подписки будут действовать до окончания оплаченного периода. О любых изменениях условий мы заблаговременно уведомим всех пользователей, за 7 календарных дней.</p>
                         <hr>
-                        <p class="mb-0">Оплата находится в конце страницы. По любым вопросам вы можете связаться с нашей службой поддержки по адресу <a href="mailto:info@стройка.com">info@стройка.com</a>.</p>
+                        <p class="mb-0">По любым вопросам вы можете связаться с нашей службой поддержки по адресу <a href="mailto:info@стройка.com">info@стройка.com</a>.</p>
                     </div>
 
                     <form id="legal-entity-form">
@@ -40,20 +41,27 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="legal_address">Юридический адрес:</label>
-                                    <input type="text" id="legal_address" name="legal_address" value="{{ $legal_address }}" class="form-control" readonly>
+                                    <input type="text" id="legal_address" name="legal_address" value="{{ $legal_address }}" class="form-control no-text-transform" readonly>
                                 </div>
+                                <input type="hidden" id="main_region_id" name="main_region_id" value="{{ $main_region_id }}">
                                 <div class="form-group">
-                                    <label for="physical_address">Фактический адрес:</label>
-                                    <input type="text" id="physical_address" name="physical_address" value="{{ $physical_address }}" class="form-control no-text-transform" required>
+                                    <label for="main_region">Регион юридического адреса: <span class="text-danger">*</span></label>
+                                    <select id="main_region" name="main_region" class="form-control" disabled>
+                                        <option value="">Выберите основной регион</option>
+                                    </select>
                                 </div>
+                                
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
-                                    <label for="email">Email:</label>
-                                    <input type="email" id="email" name="email" class="form-control no-text-transform" required>
+                                    <label for="email">Email: <span class="text-danger">*</span></label>
+                                    <input type="email" id="email" name="email" 
+                                           class="form-control no-text-transform" 
+                                           value="{{ auth()->check() ? auth()->user()->email : '' }}"
+                                           {{ auth()->check() ? 'disabled' : 'required' }}>
                                 </div>
                                 <div class="form-group">
-                                    <label for="phone">Телефон:</label>
+                                    <label for="phone">Телефон: <span class="text-danger">*</span></label>
                                     <input type="tel" id="phone" name="phone" class="form-control" required>
                                 </div>
                                 <div class="form-group">
@@ -61,42 +69,45 @@
                                     <input type="tel" id="additional_phone" name="additional_phone" class="form-control">
                                 </div>
                                 <div class="form-group">
-                                    <label for="contact_name">Контактное лицо:</label>
+                                    <label for="contact_name">Контактное лицо: <span class="text-danger">*</span></label>
                                     <input type="text" id="contact_name" name="contact_name" class="form-control" required>
                                 </div>
-                                <div class="form-group">
-                                    <label for="password">Создайте пароль:</label>
-                                    <div class="input-group">
-                                        <input type="password" id="password" name="password" class="form-control" required>
-                                        <span class="input-group-text toggle-password" data-target="#password">
-                                            <i class="fas fa-eye"></i>
-                                        </span>
+                                @if(!auth()->check())
+                                    <div class="form-group">
+                                        <label for="password">Создайте пароль: <span class="text-danger">*</span></label>
+                                        <div class="input-group" style="margin-bottom: -4px;">
+                                            <input type="password" id="password" name="password" class="form-control no-text-transform" required>
+                                            <span class="input-group-text toggle-password" data-target="#password">
+                                                <i class="fas fa-eye"></i>
+                                            </span>
+                                        </div>
+                                        <div id="password-error-message" class="text-danger mt-1"></div>
                                     </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="confirm_password">Повторите пароль:</label>
-                                    <div class="input-group">
-                                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
-                                        <span class="input-group-text toggle-password" data-target="#confirm_password">
-                                            <i class="fas fa-eye"></i>
-                                        </span>
+                                    <div class="form-group">
+                                        <label for="confirm_password">Повторите пароль: <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" id="confirm_password" name="confirm_password" class="form-control no-text-transform" required>
+                                            <span class="input-group-text toggle-password" data-target="#confirm_password">
+                                                <i class="fas fa-eye"></i>
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
+                                @else
+                                    <input type="hidden" id="password" name="password" value="existing_password">
+                                    <input type="hidden" id="confirm_password" name="confirm_password" value="existing_password">
+                                @endif
                             </div>
                             <div class="col-md-12">
                                 <div id="address-suggestions" class="suggestions-container-static"></div>
                             </div>
                         </div>
-
-                        <div class="form-group">
-                            <label for="main_region">Основной регион:</label>
-                            <select id="main_region" name="main_region" class="form-control" required>
-                                <option value="">Выберите основной регион</option>
-                            </select>
-                        </div>
-
+                        
                         <div class="form-group mt-4">
-                            <label for="region-input">Поиск и выбор дополнительныхрегионов:</label>
+                                    <label for="physical_address">Фактический адрес: <span class="text-danger">*</span></label>
+                                    <input type="text" id="physical_address" name="physical_address" value="{{ $physical_address }}" class="form-control no-text-transform" required>
+                                </div>
+                        <div class="form-group mt-4">
+                            <label for="region-input">Поиск и выбор дополнительных регионов оказания услуг по строительству:</label>
                             <input type="text" class="form-control" id="region-input" placeholder="Начните вводить название региона">
                             <div id="region-dropdown" class="region-dropdown" style="display: none;"></div>
                             <div id="selected-regions" class="mt-2"></div>
@@ -106,29 +117,24 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label for="yandex_maps_link">Ссылка на Яндекс Карты (используется для оценки рейтинга и ссылки на отзывы):</label>
+                            <input type="text" id="yandex_maps_link" name="yandex_maps_link" placeholder="Вставьте ссылку на Яндекс Карты, например: https://yandex.ru/maps/..." class="form-control">
+                        </div>
+
                         <div class="mt-4 text-center">
                             <p>Для завершения регистрации и передачи данных на проверку, пожалуйста, нажмите кнопку ниже:</p>
                         </div>
                         <div class="row justify-content-center">
                             <div id="error_container" class="col-md-12 text-center text-danger" style="display: none;">
-                                <p id="error_message">Ошибка при вводе данных</p>
+                                <p id="error_message"></p>
                             </div>    
                             <div class="col-md-12 text-center">
-                                <p>100 рублей</p>
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">
-                                    Оплатить
+                                <div id="error_message" class="alert alert-danger mt-3" style="display: none;"></div>
+                                <button type="button" class="btn btn-primary" id="confirmRegistration" disabled>
+                                    Оплатить 1 рубль
                                 </button>
                             </div>    
-                            <div class="col-md-12 text-center">
-                                @component('components.payment-modal', [
-                                    'type' => 'registration',
-                                    'id' => 1,
-                                    'title' => 'Регистрация юридического лица',
-                                    'image' => '',
-                                    'price' => 100
-                                ])
-                                @endcomponent
-                            </div>
                         </div>
                     </form>
                 </div>
@@ -153,6 +159,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const phoneInput = document.getElementById('phone');
     const additionalPhoneInput = document.getElementById('additional_phone');
     const token = "{{ env('DADATA_API') }}"; // Using the token from .env file
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const confirmButton = document.getElementById('confirmRegistration');
+    const errorMessageDiv = document.getElementById('error_message');
+    const errorContainer = document.getElementById('error_container');
+    const confirmPasswordField = document.getElementById('confirm_password');
 
     //same for phone and additional phone
     formatPhoneNumber(phoneInput);
@@ -211,48 +223,33 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let regions = [];
     let selectedRegions = new Map(); // Changed to Map to store both code and name
-    // Function to find the closest matching region
-    function findClosestRegion(legalAddress, allRegions) {
-        // Normalize the address region
-        let normalizedAddressRegion = normalizeString(legalAddress.split(',')[0].trim());
-        let closestRegion = null;
-        let highestSimilarity = 0;
+    // Define city to region mapping
+    const cityToRegion = {
+        'екатеринбург': 'свердловская область',
+        'выборг': 'ленинградская область',
+        'нижний новгород': 'нижегородская область',
+        'казань': 'республика татарстан',
+        'уфа': 'республика башкортостан',
+        'челябинск': 'челябинская область',
+        'пермь': 'пермский край',
+        'тюмень': 'тюменская область',
+        'ижевск': 'удмуртская республика',
+        'москва': 'московская область',
+        'новосибирск': 'новосибирская область',
+        'омск': 'омская область',
+        'самара': 'самарская область',
+        'краснодар': 'краснодарский край',
+        'г курск': 'курская'
+    };
 
-        
-        allRegions.forEach(region => {
-            ////console.log("checking", normalizedAddressRegion, "against", region.name);
-            const normalizedRegionName = normalizeString(region.name);
-            
-            // Count matching characters
-            const charMatches = new Set([...normalizedAddressRegion].filter(char => normalizedRegionName.includes(char))).size;
-
-            // Count matching words
-            const addressWords = normalizedAddressRegion.split(/\s+/);
-            const regionWords = normalizedRegionName.split(/\s+/);
-            const wordMatches = addressWords.filter(word => regionWords.some(w2 => w2.includes(word) || word.includes(w2))).length;
-
-            // Calculate similarity scores
-            const charSimilarity = charMatches / Math.max(normalizedAddressRegion.length, normalizedRegionName.length);
-            const wordSimilarity = wordMatches / Math.max(addressWords.length, regionWords.length);
-
-            // Combine scores (you can adjust weights if needed)
-            const similarity = (charSimilarity + wordSimilarity) / 2;
-            if (similarity > highestSimilarity) {
-                highestSimilarity = similarity;
-                closestRegion = region.code;
-            }
-        });
-
-        ////console.log("Similarity of :", highestSimilarity);
-        return closestRegion;
-    }
+   
 
     // Fetch regions from the server
     fetch('/api/regions')
         .then(response => response.json())
         .then(data => {
             regions = data;
-            const closestRegionCode = findClosestRegion("{{ $legal_address }}", data);
+            //const closestRegionCode = findClosestRegion("{{ $legal_address }}", data);
             //console.log("Closest region code:", closestRegionCode); // Use //console.log for debugging
 
             // Populate main region dropdown
@@ -261,18 +258,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 option.value = region.code;
                 option.textContent = region.name;
                 
-                // Check if this region is the closest match
-                if (region.code === closestRegionCode) {
+                // get from post values
+                if (region.code == document.getElementById('main_region_id').value) {
                     option.selected = true;
                 }
                 
                 mainRegionSelect.appendChild(option);
             });
-
-            // Ensure the closest region is selected (as a fallback)
-            if (closestRegionCode) {
-                mainRegionSelect.value = closestRegionCode;
-            }
 
             // Show all regions when the input is clicked
             regionInput.addEventListener('click', function() {
@@ -446,34 +438,113 @@ document.addEventListener('DOMContentLoaded', function() {
             suggestionsContainer.style.display = 'none';
         }
     });
-
-    const paymentButton = document.querySelector('[data-bs-target="#paymentModal"]');
     
-    paymentButton.addEventListener('click', function(e) {
-        const requiredFields = ['password', 'confirm_password', 'inn', 'company_name', 'contact_name', 'email', 'phone'];
-        let hasError = false;
-        
-        requiredFields.forEach(field => {
-            if (document.getElementById(field).value === '') {
-                showError(`Поле ${field} не может быть пустым`);
-                hasError = true;
+    confirmButton.addEventListener('click', function() {
+        const registrationForm = document.getElementById('legal-entity-form');
+        const formData = new FormData(registrationForm);
+        const endpoint = '/api/tinkoff/init';
+
+        console.log('Submitting order to:', endpoint, formData);
+        formData.append('order_type', 'registration');
+
+        fetch(endpoint, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
             }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success === true) {
+                window.location.href = data.paymentUrl;
+            } else {
+                errorMessageDiv.textContent = data.error_message || 'Произошла ошибка при обработке запроса';
+                console.log(data.error_content);
+                errorContainer.style.display = 'block';
+                confirmButton.disabled = false; // Re-enable the button to allow retry
+            }
+        })
+        .catch(error => {
+            errorMessageDiv.textContent = 'Произошла ошибка при обработке запроса';
+            console.log(data.error_content);
+            errorContainer.style.display = 'block';
+            confirmButton.disabled = false;
         });
+    });
+    // Add this function to check passwords match
+    function validatePasswords() {
+        let isValid = true;
+        console.log("validating passwords", passwordInput.value);
+        if (passwordInput.value === "existing_password") {
+            console.log("password is existing, skipping validation");
+            return true;
+        }
+        console.log("password is not existing, validating");
+        let errorMessages = [];
 
-        if (document.getElementById('password').value !== document.getElementById('confirm_password').value) {
-            showError('Пароли не совпадают');
-            hasError = true;
+        // Check for Latin letters only
+        const latinLettersRegex = /^[A-Za-z0-9!@#$%^&*()_+\-=\[\]{};:'",.<>/?\\|`~]*$/;
+        if (!latinLettersRegex.test(passwordInput.value)) {
+            errorMessages.push('Пароль должен содержать только латинские буквы и спецсимволы');
+            isValid = false;
         }
 
-        if (hasError) {
-            e.preventDefault();
+        // Check password length
+        if (passwordInput.value.length < 8) {
+            errorMessages.push('Пароль должен содержать минимум 8 символов');
+            isValid = false;
         }
+
+        // Check if passwords match
+        if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
+            errorMessages.push('Пароли не совпадают');
+            confirmPasswordInput.classList.add('red-border');
+            isValid = false;
+        } else {
+            confirmPasswordInput.classList.remove('red-border');
+        }
+
+        // Display or hide error messages
+        if (!isValid) {
+            errorMessageDiv.innerHTML = errorMessages.map(msg => `<div class="text-danger">${msg}</div>`).join('');
+            errorContainer.style.display = 'block';
+            document.getElementById('password-error-message').innerHTML = errorMessages.join('<br>');
+        } else {
+            errorMessageDiv.innerHTML = '';
+            errorContainer.style.display = 'none';
+            document.getElementById('password-error-message').innerHTML = '';
+        }
+
+        return isValid;
+    }
+
+    // Add these event listeners
+    if (passwordInput.value !== "existing_password") {
+        confirmPasswordInput.addEventListener('blur', validatePasswords);
+        passwordInput.addEventListener('input', validatePasswords);
+        confirmPasswordInput.addEventListener('input', validatePasswords);
+    } else {
+        passwordInput.value = "existing_password";
+        confirmPasswordInput.value = "existing_password";
+    }
+    physicalAddressInput.addEventListener('input', validatePasswords);
+
+    // Update the existing checkFormValidity function
+    function checkFormValidity() {
+        const isValid = form.checkValidity() && validatePasswords();
+        confirmButton.disabled = !isValid;
+    }
+
+    // Add event listeners to all form inputs
+    const form = document.getElementById('legal-entity-form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', checkFormValidity);
     });
 
-    function showError(message) {
-        document.getElementById('error_container').style.display = 'block';
-        document.getElementById('error_message').textContent = message;
-    }
+    // Initial check
+    checkFormValidity();
 });
 </script>
 @endsection

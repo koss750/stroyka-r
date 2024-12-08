@@ -80,7 +80,7 @@
                             </div>
                             <div class="flipCard-Text">
                                 <h3 class="title">{{ $design->title }}m<sup>2</sup></h3>
-                                <h3 class="price">{{ $design->price }} руб.</h3>
+                                <h3 class="price" style="display: none;">{{ $design->price }} руб.</h3>
                             </div>
                         </article>
                     </a>

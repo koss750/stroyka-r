@@ -17,12 +17,14 @@
         <i class="fas fa-comments"></i>
     </div>
     <div class="feedback-form" id="feedbackForm">
-    <form method="POST" action="{{ route('send.feedback') }}" onsubmit="return confirmSubmission()">
-    @csrf
-    <input type="text" name="name" placeholder="Ваше имя" required>
-    <input type="email" name="email" placeholder="Ваш email" required>
-    <textarea name="message" placeholder="Ваше сообщение" maxlength="1000" onkeyup="updateCounter(this)"></textarea>
-    <div class="char-counter"><span id="charCount">1000</span> символов осталось. Файлы и длинные сообщения присылайте на <a href="mailto:info@стройка.com">info@стройка.com</a></div>
+        <form method="POST" action="{{ route('send.feedback') }}" onsubmit="return confirmSubmission()">
+            @csrf
+            <input type="text" name="name" placeholder="Ваше имя" required>
+            <input type="text" name="phone" placeholder="Ваш телефон">
+            <input type="email" name="email" placeholder="Ваш email" required>
+            <textarea name="message" placeholder="Ваше сообщение" maxlength="1000" onkeyup="updateCounter(this)"></textarea>
+            <div class="char-counter"><span id="charCount">1000</span> символов осталось. Файлы и длинные сообщения присылайте на <a href="mailto:info@стройка.com">info@стройка.com</a></div>
+          
         <button type="submit">Отправить</button>
     </form>
     </div>

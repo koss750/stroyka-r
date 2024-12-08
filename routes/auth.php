@@ -13,12 +13,9 @@ use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 
+
+
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-                ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
-
     Route::get('login', [LoginController::class, 'redirectToHome'])->name('login');
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
@@ -37,7 +34,6 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    //Route::get('login', [LoginController::class, 'redirectToHome'])->name('login');
     Route::get('verify-email', EmailVerificationPromptController::class)
                 ->name('verification.notice');
 

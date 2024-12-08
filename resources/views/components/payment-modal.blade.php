@@ -17,9 +17,11 @@
         } else {
             $example = false;
             $modal_id = "paymentModal";
-            $label = "Стоимость сметы на фундамент";
             $button_label = "Оплатить";
-            $price = 100;
+            if (!isset($price)) {
+                $price = 10;
+            }
+            $label = "Смета на фундамент - " . $price . "₽";
         }
     } else if ($type === 'design') {
         $order_type = 'design';
@@ -32,17 +34,12 @@
         } else {
             $priceMaterial = $price['smeta_project'];
             $priceLabour = $price['smeta_project_labour'];
-            $price = 100;
+            $price = 1;
             $example = false;
             $modal_id = "paymentModal";
             $label = "Стоимость сметы";
             $button_label = "Оплатить";
         }
-    } else if ($type === 'registration') {
-        $order_type = 'registration';
-        $modal_id = "paymentModal";
-        $label = "Оплата регистрации";
-        $button_label = "Оплатить";
     }
 @endphp
 
@@ -59,27 +56,23 @@
                         <form id="{{ $modal_id }}_paymentForm">
                             @guest
                                 @if ($order_type != 'registration')
-                                <div id="registration-warning" class="alert alert-info">
-                                    <p>Для доступа к нашим услугам необходимо зарегистрироваться, заполнив свои данные на этой странице.</p>
-                                    <button type="button" class="btn btn-primary mt-2" id="acceptRegistration">Согласен</button>
-                                </div>
                                 
-                                <div id="registration-form" style="display: none;">
+                                <div id="registration-form">
                                     <div class="form-group">
                                         <label for="name">Имя:</label>
-                                        <input type="text" class="form-control" id="name" name="name" required>
+                                        <input type="text" class="form-control" id="name-guest-{{ $modal_id }}" name="name" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="email">Email:</label>
-                                        <input type="email" class="form-control no-text-transform" id="email" name="email" required>
+                                        <input type="email" class="form-control no-text-transform" id="email-guest-{{ $modal_id }}" name="email" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="phone">Телефон:</label>
-                                        <input type="tel" class="form-control" id="phone" name="phone" required>
+                                        <input type="tel" class="form-control no-text-transform" id="phone-guest-{{ $modal_id }}" name="phone" required>
                                     </div>
                                     <div class="form-group">
                                         <label for="password">Создать пароль:</label>
-                                        <input type="text" class="form-control" id="password" name="password" required>
+                                        <input type="text" class="form-control no-text-transform" id="password-guest-{{ $modal_id }}" name="password" required>
                                     </div>
                                 </div>
                                 @endif
@@ -119,6 +112,14 @@
                     </div>
                     <div class="col-md-7">
                         <!-- Right column content -->
+                        @guest
+                        <div id="registration-warning" class="alert alert-info">
+                            <p class="mb-0">Для доступа к нашим услугам необходимо зарегистрирваться, заполнив свои данные на этой странице.</p>
+                        </div>
+                        <div id="registration-warning" class="alert alert-danger">
+                            <p class="mb-0">Пожалуйста подтвердите ваш email после заполнения данных перейдя по ссылке в письме.</p>
+                        </div>
+                        @endguest
                         @if ($price > 0)
                             <h5>Проект {{ $title }}</h5>
                             <img src="{{ $image }}" alt="{{ $title }}" class="img-fluid mb-3">
@@ -183,7 +184,7 @@
             form.parentNode.replaceChild(newForm, form);
 
             // Add appropriate handler based on price
-            if ({{ $price }} === 0) {
+            if ({{ $price }} == 0) {
                 const exampleButton = newForm.querySelector('#example_pay_button');
                 if (exampleButton) {
                     exampleButton.addEventListener('click', handleExampleSubmit);
@@ -195,11 +196,51 @@
 
         // Common order submission function
         async function submitOrder(provider) {
+            event.preventDefault();
+            
             const form = document.getElementById('{{ $modal_id }}_paymentForm');
             const formData = new FormData(form);
-            const priceType = formData.get('price_type').split('|');
-            const selectedPrice = priceType[0];
-            const selectedPriceAmount = priceType[1];
+            
+            // First handle guest registration if needed
+            if (document.getElementById('name-guest-{{ $modal_id }}')) {
+                const name = document.getElementById('name-guest-{{ $modal_id }}').value.trim();
+                const email = document.getElementById('email-guest-{{ $modal_id }}').value.trim();
+                const phone = document.getElementById('phone-guest-{{ $modal_id }}').value.trim();
+                const password = document.getElementById('password-guest-{{ $modal_id }}').value.trim();
+                
+                console.log('Form values:', { name, email, phone, password }); // Better debugging
+                
+                if (!name || !email || !phone) {
+                    alert('Имя, email и телефон должны быть заполнены');
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    alert('Пароль должен быть длиннее 8 символов');
+                    return;
+                }
+                if (!/^[a-zA-Z0-9]+$/.test(password)) {
+                    alert('Пароль должен содержать только латинские буквы и цифры');
+                    return;
+                }
+            }
+
+            const button = event.target;
+            showLoading(button);
+
+            // Then handle price type
+            let selectedPrice, selectedPriceAmount;
+            const priceTypeValue = formData.get('price_type');
+            
+            if (priceTypeValue) {
+                const priceType = priceTypeValue.split('|');
+                selectedPrice = priceType[0];
+                selectedPriceAmount = priceType[1];
+            } else {
+                alert('Не выбран тип цены');
+                return;
+            }
+
             let orderData = {
                 payment_provider: provider,
                 payment_amount: selectedPriceAmount,
@@ -219,6 +260,15 @@
 
             // Add type-specific data
             if ('{{ $type }}' === 'foundation') {
+                try {
+                    if (typeof ym !== 'undefined') {
+                        ym(97430601, 'reachGoal', 'foundation_smeta_attempt');
+                    } else {
+                        console.warn('Yandex Metrika not initialized');
+                    }
+                } catch (error) {
+                    console.error('Yandex Metrika error:', error);
+                }
                 const foundationForm = document.getElementById('stripFoundationForm');
                 const inputs = foundationForm.querySelectorAll('[data-excel-cell]');
                 orderData.foundation_data = {};
@@ -242,25 +292,17 @@
                     orderData.foundation_id = '{{ $id }}';
                     orderData.foundation_data[cellIndex] = cellValue;
                 });
-            } else if ('{{ $type }}' === 'registration') {
-                const registrationForm = document.getElementById('legal-entity-form');
-                orderData = {
-                    inn: document.getElementById('inn').value,
-                    company_name: document.getElementById('company_name').value,
-                    kpp: document.getElementById('kpp').value,
-                    ogrn: document.getElementById('ogrn').value,
-                    legal_address: document.getElementById('legal_address').value,
-                    physical_address: document.getElementById('physical_address').value,
-                    email: document.getElementById('email').value,
-                    phone: document.getElementById('phone').value,
-                    additional_phone: document.getElementById('additional_phone').value,
-                    contact_name: document.getElementById('contact_name').value,
-                    password: document.getElementById('password').value,
-                    main_region: document.getElementById('main_region').value,
-                    region_codes: document.getElementById('region-codes').value,
-                };
             } else {
                 // Design order specific data
+                try {
+                    if (typeof ym !== 'undefined') {
+                        ym(97430601, 'reachGoal', 'design_smeta_attempt');
+                    } else {
+                        console.warn('Yandex Metrika not initialized');
+                    }
+                } catch (error) {
+                    console.error('Yandex Metrika error:', error);
+                }
                 orderData.design_id = '{{ $id }}';
                 orderData.selected_configuration = JSON.stringify(selectedOptionRefs);
                 orderData.configuration_descriptions = JSON.stringify(getConfigurationDescriptions());
@@ -282,12 +324,47 @@
             });
             return response.json();
         }
+        let name, email, phone, password;
 
+        
         // Handler for example (free) submissions
         async function handleExampleSubmit(event) {
-            event.preventDefault();
+            event.preventDefault(); // Move this to the top
+            try {
+                if (typeof ym !== 'undefined') {
+                    ym(97430601, 'reachGoal', 'free_smeta');
+                } else {
+                    console.warn('Yandex Metrika not initialized');
+                }
+            } catch (error) {
+                console.error('Yandex Metrika error:', error);
+            }
+            if (document.getElementById('name-guest-{{ $modal_id }}')) {
+                const name = document.getElementById('name-guest-{{ $modal_id }}').value.trim();
+                const email = document.getElementById('email-guest-{{ $modal_id }}').value.trim();
+                const phone = document.getElementById('phone-guest-{{ $modal_id }}').value.trim();
+                const password = document.getElementById('password-guest-{{ $modal_id }}').value.trim();
+                
+                console.log('Form values:', { name, email, phone, password }); // Better debugging
+                
+                if (!name || !email || !phone) {
+                    alert('Имя, email и телефон должны быть заполнены');
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    alert('Пароль должен быть длиннее 8 символов');
+                    return;
+                }
+                if (!/^[a-zA-Z0-9]+$/.test(password)) {
+                    alert('Пароль должен содержать только латинские буквы и цифры');
+                    return;
+                }
+            }
             const button = event.target;
             showLoading(button);
+            
+            
 
             try {
                 const response = await submitOrder('example');
@@ -338,25 +415,6 @@
         function hideLoading(button) {
             button.disabled = false;
             button.innerHTML = button.getAttribute('data-original-text');
-        }
-
-        const acceptButton = document.getElementById('acceptRegistration');
-        const registrationForm = document.getElementById('registration-form');
-        const registrationWarning = document.getElementById('registration-warning');
-        const submitButton = document.querySelector('button[type="submit"]');
-
-        if (submitButton) {
-            submitButton.style.display = 'none';
-        }
-
-        if (acceptButton) {
-            acceptButton.addEventListener('click', function() {
-                registrationForm.style.display = 'block';
-                registrationWarning.style.display = 'none';
-                if (submitButton) {
-                    submitButton.style.display = 'block';
-                }
-            });
         }
     });
 </script>
@@ -430,5 +488,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    button[type="submit"]:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 </style>

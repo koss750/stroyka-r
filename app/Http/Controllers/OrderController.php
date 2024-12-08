@@ -19,52 +19,121 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Foundation;
 use App\Jobs\FoundationOrderFileJob;
 use App\Jobs\GenerateOrderExcelJob;
-
+use App\Models\PricePlan;
+use App\Models\Supplier;
+use App\Notifications\LegalRegistrationEmail;
 
 class OrderController extends Controller
 {
-    public function processMembershipOrder(Request $request)
+    public function processRegistrationOrder(Request $request)
     {
-        //assign or create user
-        if (Auth::check() && $request->input('logged_in')) {
-            $user = Auth::user();
-        } elseif (!$request->input('logged_in')) {
-            $registerController = new RegisterController();
-            $user = $registerController->create($request, true);
-            $request->merge(['user_id' => $user->id]);
-        } else {
-            $user = null;
+        $same_email = Supplier::where('email', $request->input('email'))->first();
+        if ($same_email && !$request->input('logged_in')) {
+            Log::info('Same email found', ['email' => $request->input('email')]);
+            return response()->json(['error_message' => 'Пользователь с таким email уже существует'], 401);
+        }
+        $same_phone = Supplier::where('phone', $request->input('phone'))->first();
+        if ($same_phone) {
+            Log::info('Same phone found', ['phone' => $request->input('phone')]);
+            return response()->json(['error_message' => 'Пользователь с таким телефоном уже существует'], 401);
+        }
+            
+        try {
+            if (Auth::check() && $request->input('logged_in')) {
+                $user = Auth::user();
+                $request->merge(['user_id' => $user->id]);
+            } elseif (!$request->input('logged_in')) {
+                $registerController = new RegisterController();
+                $request->merge(['name' => $request->input('contact_name')]);
+                $user = $registerController->create($request, true);
+                $request->merge(['user_id' => $user->id]);
+            } else {
+                return response()->json(['error_message' => 'Не смогли найти или зарегестрировать пользователя'], 401);
+            }
+        } catch (\Exception $e) {
+            Log::error('User creation error: ' . $e->getMessage());
+            $same_email = Supplier::where('email', $request->input('email'))->first();
+            if ($same_email) {
+                return $this->returnError('Пользователь с таким email уже существует');
+            }
+            return $this->returnError('Ошибка при регистрации пользователя', $e->getMessage());
         }
 
-        //$price_type_id = $request->input('price_type_id');
         $price_type_id = 3;
         $price_type = PricePlan::findOrFail($price_type_id);
+        $price = $price_type->price;
 
-        $orderType = 'membership';
+        $same_supplier = Supplier::where('inn', $request->input('inn'))->first();
+        if ($same_supplier) {
+            return $this->returnError('Пользователь с таким ИНН уже существует');
+        }
         
-        
+
+        $orderType = 'registration';
+        $payment_reference = (string)(random_int(1000000000, 9999999999));
+
+        $configuration = [
+            "plan" => $price_type->id,
+            "start_date" => date('Y-m-d'),
+            "end_date" => date('Y-m-d', strtotime('+' . $price_type->duration . ' days')),
+        ];
+        try {
+            $project = Project::create([
+                'user_id' => $user->id,
+                'human_ref' => "M" . $request->input('inn') . '_' . date('Ymd'),
+                'order_type' => $orderType,
+                'ip_address' => $request->ip(),
+                'is_example' => 0,
+                'payment_reference' => $payment_reference,
+                'payment_amount' => 500,
+                'foundation_id' => null,
+                'selected_configuration' => "registration",
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Project creation error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error_message' => 'Ошибка при создании заказа', 'error_content' => $e->getMessage()], 401);
+        }
+        try {
+            $legalEntityId = $registerController->registerLegalEntity($request, true);
+        } catch (\Exception $e) {
+            Log::error('Legal entity registration error: ' . $e->getMessage());
+            return $this->returnError('Ошибка при регистрации юридического лица', $e->getMessage());
+        }
+
         if (env('PAYMENT_PROVIDER') === 'TEST-POS') {
             $result = [
-                    'paymentUrl' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => base64_encode("M" . $request->input('inn') . '_' . date('Ymd'))]),
+                    'paymentUrl' => route('registration.success'),
                     'payment_id' => $payment_reference
             ];
         } else {
             try {
                 $tinkoff = app(TinkoffService::class);
                     //dd($request->all());
+                    $rand = rand(100, 1000);
                     $result = $tinkoff->initPayment([
-                        'amount' => $price_type->price*100,
+                        'amount' => $price*100,
                         'email' => $user->email,
                         'phone' => $user->phone,
-                        'orderId' => "M" . $request->input('inn') . '_' . date('Ymd'),
+                        'orderId' => "M" . $request->input('inn') . '_' . date('Ymd') . '_' . $rand,
                         'description' => "Подписка на СТРОЙКА.com на 30 дней",
                     ]);
+                $user->notify(new LegalRegistrationEmail($user));
                 } catch (\Exception $e) {
                     Log::error('Tinkoff payment error: ' . $e->getMessage());
-                    return response()->json(['error' => 'Payment system error'], 500);
+                    return response()->json(['success' => false, 'error_message' => 'Ошибка при создании заказа', 'error_content' => $e->getMessage()], 401);
             }
         }
-        $registerController->create($request, true);
+        return $this->returnSuccess($result['paymentUrl'], $result['payment_id']);
+    }
+
+    public function returnError($error_message, $error_content = null)
+    {
+        return response()->json(['success' => false, 'error_message' => $error_message, 'error_content' => $error_content], 401);
+    }
+
+    public function returnSuccess($paymentUrl, $paymentId)
+    {
+        return response()->json(['success' => true, 'paymentUrl' => $paymentUrl, 'paymentId' => $paymentId]);
     }
 
     public function processFoundationOrder(Request $request)
@@ -249,6 +318,7 @@ class OrderController extends Controller
             $registerController = new RegisterController();
             $user = $registerController->create($request, true);
             $request->merge(['user_id' => $user->id]);
+            Auth::login($user);
         } else {
             return response()->json(['error' => 'Logged in user check failed'], 401);
         }
@@ -284,17 +354,47 @@ class OrderController extends Controller
     public function viewFiscalReceipt($id)
     {
         $project = Project::where('payment_reference', $id)->firstOrFail();
-        $design = Design::find($project->design_id);
+        switch ($project->order_type) {
+            case 'foundation':
+                $type = "Foundation";
+                $type_description = "Услуга по расчету фундамента - " . $project->foundation->site_title;
+                $design = Foundation::find($project->foundation_id);
+                break;
+            case 'registration':
+                $type = "Registration";
+                break;
+            case 'design':
+                $type = "Design";
+                $type_description = "Услуга по проекту - " . $project->design->title;
+                $design = Design::find($project->design_id);
+                break;
+        }
         $user_email = $project->user->email;
-        return view('fiscal-receipt', compact('project', 'design', 'user_email'));
+        $time = $project->updated_at->addHours(3);
+        return view('fiscal-receipt', compact('project', 'design', 'user_email', 'type', 'type_description', 'time'));
     }
 
     public function viewGeneralReceipt($id)
     {
         $project = Project::where('payment_reference', $id)->firstOrFail();
-        $design = Design::find($project->design_id);
+        switch ($project->order_type) {
+            case 'foundation':
+                $type = "Foundation";
+                $type_description = "Услуга по расчету фундамента - " . $project->foundation->site_title;
+                $design = Foundation::find($project->foundation_id);
+                break;
+            case 'registration':
+                $type = "Registration";
+                break;
+            case 'design':
+                $type = "Design";
+                $type_description = "Услуга по проекту - " . $project->design->title;
+                $design = Design::find($project->design_id);
+                break;
+        }
         $user_email = $project->user->email;
-        return view('general-receipt', compact('project', 'design', 'user_email'));
+        $time = $project->updated_at->addHours(3);
+        return view('general-receipt', compact('project', 'user_email', 'type', 'type_description', 'time'));
     }
 
     public function yandexPayCallback($orderId, $payment_reference, $description, $payment_amount)

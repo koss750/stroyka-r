@@ -49,15 +49,23 @@ class Supplier extends Resource
                 ->sortable()
                 ->rules('required', 'max:255'),
 
+            Text::make('Физический адрес', 'physical_address')
+                ->sortable()
+                ->rules('required', 'max:255'),
+
+            Text::make('ОГРН', 'ogrn')
+                ->sortable()
+                ->rules('required', 'max:255'),
+
             Email::make(Translator::translate('email'), 'email')
                 ->sortable()
                 ->rules('required', 'email', 'max:254'),
 
-            Text::make(Translator::translate('phone_1'), 'phone_1')
+            Text::make(Translator::translate('phone_1'), 'phone')
                 ->sortable()
                 ->rules('required', 'max:255'),
 
-            Text::make(Translator::translate('phone_2'), 'phone_2')
+            Text::make(Translator::translate('phone_2'), 'additional_phone')
                 ->sortable()
                 ->rules('required', 'max:255'),
 
@@ -65,26 +73,29 @@ class Supplier extends Resource
                 ->sortable()
                 ->rules('nullable', 'max:255'),
 
+            Text::make('Status', 'status')
+                ->displayUsing(function ($value) {
+                    $value = $value . "_label";
+                    return Translator::translate($value);
+                })->onlyOnIndex(),
+
+                Text::make('Status', 'status')
+                ->displayUsing(function ($value) {
+                    $value = $value . "_label";
+                    return Translator::translate($value);
+                })->onlyOnDetail(),
+
             Select::make('Status', 'status')
                 ->options([
                     Translator::translate('applied_label') => Translator::translate('applied_label'),
                     Translator::translate('pending_label') => Translator::translate('pending_label'),
                     Translator::translate('approved_label') => Translator::translate('approved_label'),  
-                ]),
+                ])->onlyOnForms(),
 
-            Select::make('Type of Organisation', 'type_of_organisation')
-                ->options([
-                    'llc' => Translator::translate('LLC_label'),
-                    'brigade' => Translator::translate('Brigade_label'),
-                    'sole_trader' => Translator::translate('Sole_Trader_label'),
-                ])
-                ->displayUsingLabels()
-                ->sortable()
-                ->rules('required', 'max:255'),
-
-            Text::make('Region Code', 'region_code')
-                ->sortable()
-                ->rules('required', 'max:255'),
+            Text::make('Регионы', 'regions')
+                ->displayUsing(function ($value) {
+                    return $value->pluck('name');
+                }),
         ];
     }
 

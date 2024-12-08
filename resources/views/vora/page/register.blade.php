@@ -1,7 +1,7 @@
 @extends('layouts.fullwidth')
 
 @section('content')
-<div class="col-md-6">
+<div class="col-md-6" style="margin-top: 10%">
     <div class="authincation-content">
         <div class="row no-gutters">
             <div class="col-xl-12">

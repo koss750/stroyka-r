@@ -11,7 +11,7 @@ class BlogController extends Controller
     {
         $posts = BlogPost::where('is_published', true)
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate(100);
 
         return view('blog.index', compact('posts'));
     }

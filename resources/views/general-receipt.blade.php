@@ -17,7 +17,7 @@
                     <strong>КАССОВЫЙ ЧЕК №:</strong> {{ $project['payment_reference'] }}
                 </div>
                 <div class="col-6 text-right">
-                    <strong>Дата:</strong> {{ date('d.m.y H:i') }}
+                    <strong>Дата:</strong> {{ $time->format('d.m.y H:i') }}
                 </div>
             </div>
 
@@ -38,7 +38,7 @@
                 <div class="col-8">
                     <strong>Заказ {{ $project['human_ref'] }}</strong>
                     <br>
-                    <small><span class="text-muted">Услуга по проекту {{ $design['title'] }}</span></small>
+                    <small><span class="text-muted">{{ $type_description }}</span></small>
                 </div>
                 <div class="col-4 text-right">
                     1 x {{ $project['payment_amount'] }} руб.
@@ -80,7 +80,6 @@
             <p class="no-margin"><strong>Признак предмета расчета:</strong> УСЛУГА</p>
             <p class="no-margin"><strong>ККТ для Интернет:</strong> Да</p>
             <p class="no-margin"><strong>ЭЛ.АДР.ОТПРАВИТЕЛЯ:</strong> info@стройка.com</p>
-            <p class="no-margin"><strong>ИНН:</strong> 502810131560</p>
             <p class="no-margin"><strong>САЙТ ФНС:</strong> www.nalog.gov.ru</p>
             <p class="no-margin"><strong>ЭЛ.АДР.ПОКУПАТЕЛЯ:</strong> {{ $user_email }}</p>
             

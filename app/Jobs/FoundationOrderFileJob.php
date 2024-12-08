@@ -148,7 +148,13 @@ class FoundationOrderFileJob implements ShouldQueue
     {
         $sheet = $this->spreadsheet->getSheetByName("данные");
         foreach ($this->cellMappings as $cell => $value) {
+            if (strpos($value, ",") !== false) {
+                $value = str_replace(",", ".", $value);
+                $value = (float)$value;
+                $value = round($value, 2);
+            }
             $sheet->setCellValue($cell, $value);
+            Log::info($cell . " " . $value);
         }
         Calculation::getInstance($this->spreadsheet)->clearCalculationCache();
     }

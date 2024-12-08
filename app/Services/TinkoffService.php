@@ -49,14 +49,21 @@ class TinkoffService
         $base64ref = base64_encode($params['orderId']);
         //get device from user agent
         $device = strpos($_SERVER['HTTP_USER_AGENT'], 'Mobile') !== false ? 'Mobile' : 'Desktop';
+        if (strtoupper(substr($params['orderId'], 0, 1)) === 'M') {
+            $successUrl = route('registration.success');
+            $failUrl = route('registration.fail');
+        } else {
+            $successUrl = route('payment.set.status', ['payment_status' => 'success', 'order_id' => "$base64ref"]);
+            $failUrl = route('payment.set.status', ['payment_status' => 'error', 'order_id' => "$base64ref"]);
+        }
         $amount = $params['amount'];
         $data = [
             'TerminalKey' => $this->terminalKey,
             'Amount' => $amount,
             'OrderId' => $params['orderId'],
             'Description' => $params['description'],
-            'SuccessURL' => route('payment.set.status', ['payment_status' => 'success', 'order_id' => "$base64ref"]),
-            'FailURL' => route('payment.set.status', ['payment_status' => 'error', 'order_id' => "$base64ref"]),
+            'SuccessURL' => $successUrl,
+            'FailURL' => $failUrl,
             'DATA' => [
                 'Email' => $params['email'],
                 'Phone' => $params['phone'],
@@ -91,6 +98,7 @@ class TinkoffService
             }
             $responseData = json_decode($response->body(), true) ?? null;
             $url = $responseData['PaymentURL'] ?? null;
+            //dd($responseData);
             $payment_id = $responseData['PaymentId'] ?? null;
             // Return both the payment URL from Tinkoff's response and our request data
             return [

@@ -108,6 +108,12 @@ class SupplierController extends Controller
     // Проверка компании по ИНН
     public function checkCompany($inn)
     {
+        $existingSupplier = Supplier::where('inn', $inn)->first();
+
+        if ($existingSupplier) {
+            return response()->json(['success' => false, 'existing' => true]);
+        }
+
         $token = env('DADATA_API');
 
         $response = Http::withHeaders([
@@ -130,12 +136,12 @@ class SupplierController extends Controller
             return response()->json([
                 'success' => true,
                 'company_name' => $suggestion['value'],
-                'kpp' => $suggestion['data']['kpp'],
-                'ogrn' => $suggestion['data']['ogrn'],
+                'kpp' => $suggestion['data']['kpp'] ?? null,
+                'ogrn' => $suggestion['data']['ogrn'] ?? null,
                 'address' => $suggestion['data']['address']['value'],
                 'state_status' => $suggestion['data']['state']['status'],
                 'is_active' => $is_active,
-                'ogrn_date' => $suggestion['data']['ogrn_date'],
+                'ogrn_date' => $suggestion['data']['ogrn_date'] ?? null,
             ]);
         } else {
             return response()->json([

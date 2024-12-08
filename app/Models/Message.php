@@ -10,7 +10,7 @@ class Message extends Model
     use HasFactory;
 
     protected $fillable = [
-        'sender_id', 'receiver_id', 'content', 'is_read', 'project_id'
+        'sender_id', 'receiver_id', 'content', 'subject', 'is_read', 'project_id'
     ];
 
     public function project()

@@ -27,7 +27,7 @@ class OrderGenerateFilesFoundationCommand extends Command
         $projectId = $this->argument('projectId');
         $project = Project::findOrFail($projectId);
         $foundation = $project->foundation;
-
+        
         if (!$foundation) {
             $this->error("No foundation found for Project ID: $projectId");
             return 1;
@@ -47,6 +47,12 @@ class OrderGenerateFilesFoundationCommand extends Command
         $sheet = $this->spreadsheet->getSheetByName("data");
 
         foreach ($this->cellMappings as $cell => $value) {
+            dd($value);
+            if (strpos($value, ",") !== false) {
+                //$value = str_replace(",", ".", $value);
+                $value = (float)$value;
+                dd($value);
+            }
             $sheet->setCellValue($cell, $value);
         }
 

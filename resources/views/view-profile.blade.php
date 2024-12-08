@@ -41,9 +41,15 @@
                                 @endif
                                 <div class="row mb-3">
                                     <div class="col-sm-4 col-6">
-                                        <h5 class="f-w-500">Адрес <span class="pull-right">:</span></h5>
+                                        <h5 class="f-w-500">Юридический адрес <span class="pull-right">:</span></h5>
                                     </div>
-                                    <div class="col-sm-8 col-6"><span>{{ $supplier->address }}</span></div>
+                                    <div class="col-sm-8 col-6"><span>{{ $supplier->legal_address }}</span></div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 col-6">
+                                        <h5 class="f-w-500">Фактический адрес <span class="pull-right">:</span></h5>
+                                    </div>
+                                    <div class="col-sm-8 col-6"><span>{{ $supplier->physical_address }}</span></div>
                                 </div>
                                 <div class="row mb-3">
                                     <div class="col-sm-4 col-6">
@@ -56,6 +62,12 @@
                                         <h5 class="f-w-500">ОГРН <span class="pull-right">:</span></h5>
                                     </div>
                                     <div class="col-sm-8 col-6"><span>{{ $supplier->ogrn }}</span></div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-sm-4 col-6">
+                                        <h5 class="f-w-500">Основной регион <span class="pull-right">:</span></h5>
+                                    </div>
+                                    <div class="col-sm-8 col-6"><span>Москва</span></div>
                                 </div>
                                 
                                 <div class="row mb-3">

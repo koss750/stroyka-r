@@ -10,6 +10,8 @@ $colour_class = "";
 
 @section('additional_head')
 
+<title>Мои заказы</title>
+<meta name="description" content="Мои заказы на портале Стройка.com. Здесь вы можете просматривать и управлять своими заказами, а также получать информацию о статусе их выполнения.">
 @endsection
 
 @section('content')

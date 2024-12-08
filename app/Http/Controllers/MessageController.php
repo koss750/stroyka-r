@@ -51,6 +51,8 @@ class MessageController extends Controller
             ->select('sender_id')
             ->distinct()
             ->count();
+
+        $user->setAllMessagesRead();
             
             $user->last_seen = Carbon::now();
             $user->save();
@@ -60,6 +62,7 @@ class MessageController extends Controller
                 $otherUser = $userId == $lastMessage->sender_id ? $lastMessage->sender : $lastMessage->receiver;
                 $messages[$userId] = [
                     'user' => $otherUser,
+                    'sender_name' => $otherUser->supplier ? $otherUser->supplier->company_name : $otherUser->name,
                     'last_message' => Str::limit($lastMessage->content, 50),
                     'created_at' => $lastMessage->created_at,
                     'is_read' => $lastMessage->is_read,
@@ -73,7 +76,14 @@ class MessageController extends Controller
     public function getNewMessages(Request $request, $userId)
     {
         $user = Auth::user();
-        $lastTimestamp = Carbon::parse($request->input('last_timestamp'));
+        try {
+            $timestamp = $request->input('last_timestamp');
+            $timestamp = str_replace("Вчера в", "yesterday at", str_replace("Сегодня в", "today at", $timestamp));
+            $lastTimestamp = Carbon::parse($timestamp);
+        } catch (\Exception $e) {
+            \Log::error('Error parsing timestamp', ['error' => $e->getMessage()]);
+            $lastTimestamp = Carbon::now()->subMinutes(10);
+        }
 
         $counterKey = 'new_messages_counter_' . $user->id;
         $limit = 20;
@@ -92,11 +102,13 @@ class MessageController extends Controller
             }
         }
 
+        /*
         \Log::info('Fetching new messages', [
             'user_id' => $user->id,
             'other_user_id' => $userId,
             'last_timestamp' => $lastTimestamp->toDateTimeString()
         ]);
+        */
 
         $messages = Message::where(function($query) use ($user, $userId) {
             $query->where('sender_id', $user->id)->where('receiver_id', $userId);
@@ -106,16 +118,19 @@ class MessageController extends Controller
           ->with(['project', 'sender', 'attachments'])
           ->orderBy('created_at', 'asc')
           ->get();
-
+        /*
         \Log::info('Found messages', ['count' => $messages->count()]);
-
+        */
         $formattedMessages = $messages->map(function ($message) {
+            $createdAt = $message->created_at;
+            $formattedDate = $this->formatMessageDate($createdAt);
+
             return [
                 'id' => $message->id,
                 'content' => $message->content,
                 'sender_id' => $message->sender_id,
                 'sender_name' => $message->sender->name,
-                'created_at' => $message->created_at->toDateTimeString(),
+                'created_at' => $formattedDate,
                 'is_read' => $message->is_read,
                 'project' => $message->project ? [
                     'id' => $message->project->id,
@@ -141,6 +156,7 @@ class MessageController extends Controller
     {
         $user = Auth::user();
         $otherUser = User::findOrFail($userId);
+        $otherUserName = $otherUser->supplier ? $otherUser->supplier->company_name : $otherUser->name;
         $messages = Message::where(function($query) use ($user, $userId) {
             $query->where('sender_id', $user->id)->where('receiver_id', $userId);
         })->orWhere(function($query) use ($user, $userId) {
@@ -148,34 +164,31 @@ class MessageController extends Controller
         })->with('project')->orderBy('created_at', 'asc')->get();
 
         $formattedMessages = $messages->map(function ($message) {
-            $attachments = $message->attachments->map(function ($attachment) {
-                return [
-                    'filename' => $attachment->filename,
-                    'url' => 'storage/message_attachments/' . pathinfo($attachment->path)['basename'],
-                    'mime_type' => $attachment->mime_type,
-                    'size' => $attachment->size,
-                ];
-            });
-
-            $projectInfo = null;
-            if ($message->project) {
-                $design = Design::findOrFail($message->project->design_id);
-                $projectInfo = [
-                    'title' => $design->title,
-                    'link' => "../project/" . $design->id,
-                    'filepath' => $message->project->filepath,
-                ];
-            }
+            $createdAt = $message->created_at;
+            $formattedDate = $this->formatMessageDate($createdAt);
 
             return [
                 'id' => $message->id,
+                'subject' => $message->subject,
                 'content' => $message->content,
                 'sender_id' => $message->sender_id,
-                'created_at' => $message->created_at,
+                'created_at' => $formattedDate,
                 'is_read' => $message->is_read,
                 'sender_name' => $message->sender->name,
-                'project' => $projectInfo,
-                'attachments' => $attachments,
+                'project' => $message->project ? [
+                    'id' => $message->project->id,
+                    'title' => $message->project->title,
+                    'link' => "../project/" . $message->project->design_id,
+                    'filepath' => $message->project->filepath,
+                ] : null,
+                'attachments' => $message->attachments->map(function ($attachment) {
+                    return [
+                        'filename' => $attachment->filename,
+                        'url' => 'storage/message_attachments/' . pathinfo($attachment->path)['basename'],
+                        'mime_type' => $attachment->mime_type,
+                        'size' => $attachment->size,
+                    ];
+                }),
             ];
         });
 
@@ -183,7 +196,7 @@ class MessageController extends Controller
             'messages' => $formattedMessages,
             'otherUser' => [
                 'id' => $otherUser->id,
-                'name' => $otherUser->name,
+                'name' => $otherUserName,
                 'avatar' => $otherUser->avatar,
                 'last_seen' => $otherUser->last_seen
             ]
@@ -195,17 +208,18 @@ class MessageController extends Controller
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
             'content' => 'required|string',
-            'attachment' => 'nullable|file|mimes:xls,xlsx,pdf|max:500', // 500 KB max
+            'subject' => 'nullable|string|max:255',
+            'attachment' => 'nullable|file|mimes:xls,xlsx,pdf|max:500',
         ]);
 
         $message = Message::create([
             'sender_id' => auth()->id(),
             'receiver_id' => $request->receiver_id,
             'content' => $request->content,
+            'subject' => $request->subject,
         ]);
 
         if ($request->hasFile('attachment')) {
-            dd("true");
             $file = $request->file('attachment');
             $path = $file->store('message_attachments', 'public');
             $publicPath = public_path($path);
@@ -224,17 +238,18 @@ class MessageController extends Controller
 
     public function sendMessage(Request $request)
     {
-
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
             'content' => 'required|string',
-            'attachment' => 'nullable|file|mimes:xls,xlsx,pdf,png,jpg,jpeg|max:500', // 500 KB max
+            'subject' => 'nullable|string|max:255',
+            'attachment' => 'nullable|file|mimes:xls,xlsx,pdf,png,jpg,jpeg|max:500',
         ]);
 
         $message = Message::create([
             'sender_id' => auth()->id(),
             'receiver_id' => $request->receiver_id,
             'content' => $request->content,
+            'subject' => $request->subject,
         ]);
 
         if ($request->receiver_id == 7) {
@@ -242,6 +257,7 @@ class MessageController extends Controller
             $sender = User::find(Auth::id());
             $user->notify(new FeedbackMail(
                 $sender->name,
+                $sender->phone ?? '',
                 $sender->email,
                 $request->content
             ));
@@ -356,5 +372,39 @@ class MessageController extends Controller
         ]);
 
         return response()->json($message);
+    }
+
+    private function formatMessageDate($date)
+    {
+        try {
+            if (!$date) {
+                return '';
+            }
+
+            // Ensure we're working with a Carbon instance
+            $date = $date instanceof Carbon ? $date : Carbon::parse($date);
+            $date = $date->addHours(3);
+            $now = Carbon::now()->addHours(3);
+            
+            $diffInMinutes = $now->diffInMinutes($date);
+            $diffInHours = $now->diffInHours($date);
+            $diffInDays = $now->diffInDays($date);
+
+            if ($diffInMinutes < 60) {
+                return $diffInMinutes . ' мин. назад';
+            } elseif ($now->isSameDay($date)) {
+                return 'Сегодня в ' . $date->format('H:i');
+            } elseif ($now->subDay()->isSameDay($date)) {
+                return 'Вчера в ' . $date->format('H:i');
+            } else {
+                return $date->format('d.m.Y H:i');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Date formatting error: ' . $e->getMessage(), [
+                'date' => $date,
+                'trace' => $e->getTraceAsString()
+            ]);
+            return '';
+        }
     }
 }

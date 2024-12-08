@@ -1,6 +1,9 @@
 
     @include('components.header')
 
+<!-- tag проекты и сметы для домов и бань -->
+ 
+
 <body>
 @include('components.top')
     <main>

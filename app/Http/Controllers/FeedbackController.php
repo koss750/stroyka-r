@@ -19,7 +19,8 @@ class FeedbackController extends Controller
 
         $user->notify(new FeedbackMail(
             $request->name,
-            $request->email,
+            $request->phone ?? '',
+            $request->email ?? '',
             $request->message
         ));
 
