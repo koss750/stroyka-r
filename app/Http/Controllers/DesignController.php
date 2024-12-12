@@ -24,6 +24,7 @@ use App\Models\Region;
 use App\Models\Foundation;
 use Illuminate\Support\Facades\Cache;
 use App\Models\PricePlan;
+use Illuminate\Support\Facades\Artisan;
 
 
 
@@ -474,7 +475,7 @@ $html .= '<thead class="thead-dark">';
     } elseif (strpos($design->title, 'Б-ОЦБ') !== false) {
         $page_title = "Баня из бревна " . $design->title . " " . $design->length . "м x " . $design->width . "м";
     } elseif (strpos($design->title, 'Б-ПБ') !== false) {
-        $page_title = "Баня из бруса " . $design->title . " " . $design->length . "м x " . $design->width . "м";
+        $page_title = "Баня и�� бруса " . $design->title . " " . $design->length . "м x " . $design->width . "м";
     }
     $page_description = "Расчет стоимости строительства и фундамента. " . $page_title . " " . $design->size . "м2";
     $jpgImageUrls = $design->watermarkImageUrls();
@@ -794,7 +795,58 @@ private function getPriceFromDb($id, $invoice_type_id)
         return 200;
     }
 
-    
-    
+    public function triggerIndex(Request $request)
+    {
+        // Validate API key for security
+        if ($request->header('X-API-Key') !== config('app.internal_api_key') && 
+            $request->input('X-API-Key') !== config('app.internal_api_key')) {
+            return response()->view('errors.401', [], 401);
+        }
+
+        try {
+            // Get parameters from request
+            $range = $request->input('range');
+            $id = $request->input('id');
+            $defaultOnly = $request->input('defaultOnly', false);
+
+            // Build command arguments
+            $arguments = [];
+            if ($range) {
+                $arguments['--range'] = $range;
+            }
+            if ($id) {
+                $arguments['--id'] = $id;
+            }
+            if ($defaultOnly) {
+                $arguments['--defaultOnly'] = true;
+            }
+
+            // Start output buffering
+            ob_start();
+
+            // Call the command
+            Artisan::call('app:full', $arguments);
+
+            // Get the output
+            $output = Artisan::output();
+            
+            // Clean the output buffer
+            ob_end_clean();
+
+            // Return an HTML response
+            return response()->view('command-output', [
+                'success' => true,
+                'message' => 'Index command executed successfully',
+                'output' => nl2br($output)
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->view('command-output', [
+                'success' => false,
+                'message' => 'Failed to execute index command',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 
 }

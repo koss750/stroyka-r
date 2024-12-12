@@ -17,6 +17,8 @@ class ConfirmEmail extends Notification
     public function __construct($userId)
     {
         $this->userId = $userId;
+        $this->subject = env('MAIN_SUBJECT_PREFIX') . 'Подтвердите ваш email адрес';
+        $this->replyTo = env('MAIL_FROM_ADDRESS');
     }
 
     public function via($notifiable)
@@ -33,7 +35,8 @@ class ConfirmEmail extends Notification
         );
 
         return (new MailMessage)
-            ->subject('Подтвердите ваш email адрес')
+            ->subject($this->subject)
+            ->replyTo($this->replyTo)
             ->line('Пожалуйста, нажмите на кнопку ниже, чтобы подтвердить ваш email адрес.')
             ->action('Подтвердить email адрес', $url)
             ->line('Если вы не создавали аккаунт, никаких дальнейших действий не требуется.');

@@ -24,7 +24,7 @@ use Carbon\Carbon;
 
 
 
-class FullIndexCommand extends Command
+class IndexCommand extends Command
 {
     /**
      * The name and signature of the console command.
@@ -201,6 +201,19 @@ class FullIndexCommand extends Command
     protected $designs;
     protected $spreadsheet;
 
+    protected $hardcodedIds = [
+        "emptyCases" => [312, 173],
+        "plitaCases" => [148, 171, 172]
+    ];
+
+    protected $hardcodedParams = [
+        "emptyCases" => [
+            "material" => 0,
+            "labour" => 0,
+            "total" => 0
+        ]
+    ];
+
     public function handle()
     {
 
@@ -213,17 +226,35 @@ class FullIndexCommand extends Command
             list($start, $end) = explode('-', $range);
             $this->designs = Design::whereBetween('id', [$start, $end])->where('active', '1')->get();
         } elseif ($singleId) {
-            $this->designs = Design::where('id', $singleId)->where('active', '1')->get();
+            $this->designs = Design::where('id', $singleId)->where('active', '1')->whereNotIn('id', $this->hardcodedIds['plitaCases'])->get();
         } else {
-            $this->designs = Design::where('active', '1')->get();
+            $this->designs = Design::where('active', '1')->whereNotIn('id', $this->hardcodedIds['plitaCases'])->get();
         }
         
         $this->invoices = InvoiceType::where('sheetname', '!=', null)->where('site_level4_label', "!=", "FALSE")->get();
         $sheetnames = $this->invoices->pluck('sheetname')->unique()->toArray();
         
         
-        $this->spreadsheet = IOFactory::createReader('Xlsx')->load(storage_path('templates/test.xlsx'));
+        //$this->spreadsheet = IOFactory::createReader('Xlsx')->load(storage_path('templates/test.xlsx'));
         
+        $this->info("Adding empty cases");
+        $bar = $this->output->createProgressBar(count($this->designs));
+        //change it later to handle from file
+        
+        $bar->start();
+        foreach ($this->designs as $design) {
+            $emptyCases = [312, 173];
+            foreach ($emptyCases as $emptyCase) {   
+                $NewprojectPrice = new ProjectPrice();
+                $NewprojectPrice->design_id = $design->id;
+                $NewprojectPrice->invoice_type_id = $emptyCase;
+                $NewprojectPrice->price = json_encode(["material" => 0, "labour" => 0, "total" => 0]);
+                $NewprojectPrice->save();
+            }
+            $bar->advance();
+        }
+        $bar->finish();
+        $this->info("Moving on...");
         
 
         $progressBar = $this->output->createProgressBar(count($this->designs));
@@ -810,13 +841,22 @@ class FullIndexCommand extends Command
     {
         $sheet = $this->spreadsheet->getSheetByName("data");
         $result = [];
+        $boxStart = null;
         foreach ($this->fVariationArray as $size) {
             $invoiceSVR = InvoiceType::where('label', $size[3])->first();
             $svrSheet = $this->spreadsheet->getSheetByName($invoiceSVR->sheetname);
             $sheet->setCellValue('D5', $size[2]);
             $sheet->setCellValue('D8', $size[1]);
             Calculation::getInstance($this->spreadsheet)->clearCalculationCache();
-            $boxStart = json_decode($invoiceSVR->params)->sheet_structure->boxStart;
+            $boxStart = json_decode($invoiceSVR->params);
+            try {
+                $boxStart = $boxStart->sheet_structure->boxStart;
+            } catch (\Exception $e) {
+                $boxStart = $boxStart["sheet_structure"]["boxStart"];
+            }
+            if ($boxStart == null) {
+                json_decode($invoiceSVR->params);
+            }
             $materialCell = $this->getMaterialCell($boxStart);
             $labourCell = $this->getLabourCell($boxStart);
             $materialCellValue = $svrSheet->getCell($materialCell)->getCalculatedValue();
@@ -1028,6 +1068,22 @@ class FullIndexCommand extends Command
         $this->info("Changed records: $changedCount");
         $this->info("Unchanged records: $unchangedCount");
         $this->info("Errors encountered: $errorCount");
+
+        $this->info("Adding empty cases");
+        $designs = Design::all();
+        $bar = $this->output->createProgressBar(count($designs));
+        $bar->start();
+        foreach ($designs as $design) {
+            $emptyCases = [312, 173];
+            if (in_array($design->id, $emptyCases)) {
+                $NewprojectPrice = new ProjectPrice();
+                $NewprojectPrice->project_id = $design->id;
+                $NewprojectPrice->price = json_encode(["material" => 0, "labour" => 0, "total" => 0]);
+                $NewprojectPrice->save();
+            }
+            $bar->advance();
+        }
+        $bar->finish();
     }
 
     private function formatNumber($number, $decimalPlaces)

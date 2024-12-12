@@ -79,10 +79,9 @@
             <p class="no-margin"><strong>Признак способа расчета:</strong> АВАНС</p>
             <p class="no-margin"><strong>Признак предмета расчета:</strong> УСЛУГА</p>
             <p class="no-margin"><strong>ККТ для Интернет:</strong> Да</p>
-            <p class="no-margin"><strong>ЭЛ.АДР.ОТПРАВИТЕЛЯ:</strong> info@стройка.com</p>
-            <p class="no-margin"><strong>ИНН:</strong> 502810131560</p>
+            <p class="no-margin"><strong>Электронная почта продавца:</strong> info@стройка.com</p>
             <p class="no-margin"><strong>САЙТ ФНС:</strong> www.nalog.gov.ru</p>
-            <p class="no-margin"><strong>ЭЛ.АДР.ПОКУПАТЕЛЯ:</strong> {{ $user_email }}</p>
+            <p class="no-margin"><strong>Электронная почта покупателя:</strong> {{ $user_email }}</p>
 
             <div class="text-center mt-4">
                 <p>Спасибо за покупку!</p>

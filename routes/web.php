@@ -311,3 +311,5 @@ Route::prefix('admin')->middleware(['auth', 'can:access-admin'])->group(function
 });
 
 //Route::post('/create-yandex-pay-order', [OrderController::class, 'processProjectSmetaOrder']);
+
+Route::post('/trigger-index', [DesignController::class, 'triggerIndex']);

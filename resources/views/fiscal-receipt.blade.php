@@ -4,7 +4,7 @@
 <div class="container mt-5" style="max-width:500px;">
     <div class="card">
         <div class="card-header">
-            <h2 class="text-center">Кассовый чек</h2>
+            <h2 class="text-center">Оплата заказа</h2>
         </div>
         <div class="card-body">
             <div class="text-center mb-4">
@@ -82,12 +82,6 @@
             <p class="no-margin"><strong>ЭЛ.АДР.ОТПРАВИТЕЛЯ:</strong> info@стройка.com</p>
             <p class="no-margin"><strong>САЙТ ФНС:</strong> www.nalog.gov.ru</p>
             <p class="no-margin"><strong>ЭЛ.АДР.ПОКУПАТЕЛЯ:</strong> {{ $user_email }}</p>
-            <p class="no-margin"><strong>ИП:</strong> Шевченко А.Л.</p>
-            <p class="no-margin"><strong>Адрес:</strong> 143401, Московская обл, г Красногорск</p>
-            <p class="no-margin"><strong>№ ККТ:</strong> TEST</p>
-            <p class="no-margin"><strong>№ ФН:</strong> TEST</p>
-            <p class="no-margin"><strong>№ ФД:</strong> TEST</p>
-            <p class="no-margin"><strong>ФП:</strong> TEST</p>
             
 
             <div class="text-center mt-4">

@@ -99,7 +99,7 @@ class GenerateInvoiceStructuresCommand extends Command
             $cacheKey = 'sheet_structure_' . md5($sheetname, $invoiceType->id);
             $structure = Cache::remember($cacheKey, now()->addHours(24), function () use ($worksheet, $sheetname, $invoiceType) {
                 $this->info("Generating new structure for sheet: " . $sheetname);
-                return $this->generateSheetStructure($worksheet, $invoiceType->customer_order_title);
+                return $this->generateSheetStructure($worksheet, $invoiceType->customer_order_title, $invoiceType->id);
             });
 
             $params = json_decode($invoiceType->params, true) ?: [];
@@ -113,7 +113,7 @@ class GenerateInvoiceStructuresCommand extends Command
         }
     }
 
-    private function generateSheetStructure($worksheet, $invoiceTypeTitle): array
+    private function generateSheetStructure($worksheet, $invoiceTypeTitle, $invoiceId): array
     {
         $sheetStructure = [
             "title" => "",
@@ -268,10 +268,16 @@ class GenerateInvoiceStructuresCommand extends Command
                         }
                     
                         if ($numericColIndex !== null) {
+                            $cellValue = $worksheet->getCell(Coordinate::stringFromColumnIndex($numericColIndex + 1) . $rowIndex)->getCalculatedValue();
+                            if ($cellValue == 0 || !is_numeric($cellValue)) {
+                                $incrementedRowIndex = $rowIndex + 1;
+                            } else {
+                                $incrementedRowIndex = $rowIndex;
+                            }
                             $sheetStructure['boxStart'] = [
                                 "rowIndex" => $rowIndex,
                                 "col" => Coordinate::stringFromColumnIndex($numericColIndex + 1),
-                                "firstCell" => Coordinate::stringFromColumnIndex($numericColIndex + 1) . $rowIndex
+                                "firstCell" => Coordinate::stringFromColumnIndex($numericColIndex + 1) . $incrementedRowIndex
                             ];
                         }
                         break 2; // Exit both loops

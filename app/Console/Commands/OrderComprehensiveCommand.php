@@ -50,7 +50,7 @@ class OrderComprehensiveCommand extends Command
         // Run full index for the design
         $designId = $project->design_id;
         $this->info("\nRunning full index for Design ID: $designId");
-        Artisan::call('app:index', ['--id' => $designId]);
+        Artisan::call('app:index-l', ['--id' => $designId]);
         $progressBar->advance();
 
         // Generate order file
