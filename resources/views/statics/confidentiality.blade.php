@@ -1,6 +1,10 @@
 @extends('layouts.alternative')
 
-@section('canonical', '')
+@section('additional_head')
+<title>Политика конфиденциальности персональных данных - Стройка.com</title>
+<meta name="description" content="Политика конфиденциальности персональных данных">
+<link rel="canonical" href="{{ url()->current() }}" />
+@endsection
 
 @section('content')
 <div class="container-fluid">

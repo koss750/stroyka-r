@@ -3,6 +3,9 @@
 @section('canonical', '')
 
 @section('additional_head')
+<title>Правила использования портала - Стройка.com</title>
+<meta name="description" content="Правила использования портала Cтройка.com">
+<link rel="canonical" href="{{ url()->current() }}" />
 @endsection
 
 @section('content')
