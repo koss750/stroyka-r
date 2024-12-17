@@ -6,10 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
-    <title>Стройка.com - Проекты и сметы для домов и бань</title>
-    <meta name="description" content="Проекты и сметы для домов и бань. Расчет фундаментов.">
-    <meta name="keywords" content="стройка, проекты домов, сметы, дома из бревна, дома из бруса, бани, фундаменты, каменные дома, блочные дома, каркасные дома">
-    
+    <title>Строительство домов и бань из бруса и бревна | Проекты и Сметы | Стройка.com</title>
+    <meta name="description" content="Проекты домов и бань из бруса и бревна. Посчитайте смету на строительство онлайн. Большой выбор недорогих и качественных проектов. Рассчитайте фундамент и кровлю.">
+    <meta name="keywords" content="строительство, дома, бани, брус, бревно, проекты, сметы, посчитать, калькулятор, фундамент, кровля, недорого, цены">
+
     <link rel="canonical" href="{{ url('/') }}">
     <link rel="icon" type="image/x-icon" href="{{ asset('assets/images/fav.ico') }}">
     

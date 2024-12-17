@@ -221,6 +221,9 @@
                      <option value="df_room_32">Коридор</option>
                      <option value="df_room_33">Кухня-столовая</option>
                      <option value="df_room_34">Столовая</option>
+                     <option value="df_room_35">Веранда</option>
+                     <option value="df_room_36">Купель</option>
+                     <option value="df_room_37">Раздевалка</option>
                   </select>
                </td>
                <td align="center">

@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Models\SupplierRegion;
 
 return new class extends Migration
 {
@@ -11,10 +12,14 @@ return new class extends Migration
      */
     public function up()
     {
+        $regions = DB::table('regions')->get();
+        
         Schema::table('regions', function (Blueprint $table) {
-            $table->string('iso_code', 6)->nullable()->after('code');
+            //$table->dropColumn('iso_code');
+            $table->string('iso_code', 8)->default('UNKNOWN')->after('code');
+            $table->string('country_code', 3)->default('RUS')->after('name');
         });
-
+        
         // ISO 3166-2:RU codes mapping
         $isoCodes = [
             '77' => 'RU-MOW', // Москва
@@ -100,8 +105,8 @@ return new class extends Migration
             '86' => 'RU-KHM', // Ханты-Мансийский автономный округ
             '87' => 'RU-CHU', // Чукотский автономный округ
             '89' => 'RU-YAN', // Ямало-Ненецкий автономный округ
-            '91' => 'RU-CR',  // Крым
-            '92' => 'RU-SEV', // Севастополь
+            '91' => 'UA-43',  // Крым
+            '92' => 'UA-40',  // Севастополь
             '93' => 'UA-14',  // ДНР (Donetsk historical ISO code)
             '94' => 'UA-09',  // ЛНР (Luhansk historical ISO code)
             '95' => 'UA-23',  // Запорожская область (Zaporizhzhia historical ISO code)
@@ -110,6 +115,7 @@ return new class extends Migration
 
         foreach ($isoCodes as $code => $isoCode) {
             DB::table('regions')
+                ->where('country_code', 'RUS')
                 ->where('code', $code)
                 ->update(['iso_code' => $isoCode]);
         }
@@ -119,6 +125,7 @@ return new class extends Migration
     {
         Schema::table('regions', function (Blueprint $table) {
             $table->dropColumn('iso_code');
+            $table->dropColumn('country_code');
         });
     }
 };

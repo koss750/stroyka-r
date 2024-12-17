@@ -2,18 +2,11 @@
 
 namespace App\Nova\Dashboards;
 
+use Laravel\Nova\Cards\Help;
 use Laravel\Nova\Dashboards\Main as Dashboard;
-use App\Nova\Metrics\DesignPurchaseStats;
-
 
 class Main extends Dashboard
 {
-
-    public function name()
-    {
-        return 'Общая статистика';
-    }
-
     /**
      * Get the cards for the dashboard.
      *
@@ -22,7 +15,7 @@ class Main extends Dashboard
     public function cards()
     {
         return [
-            new DesignPurchaseStats,
+            new Help,
         ];
     }
 }

@@ -110,7 +110,10 @@ class Design2 extends Resource
                     "df_room_29" => "Хозблок",
                     "df_room_32" => "Коридор",
                     "df_room_33" => "Кухня-столовая",
-                    "df_room_34" => "Столовая"
+                    "df_room_34" => "Столовая",
+                    "df_room_35" => "Веранда",
+                    "df_room_36" => "Купель",
+                    "df_room_37" => "Раздевалка"
                     ];
         case "materialType":
             return [

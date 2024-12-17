@@ -15,8 +15,13 @@
                 ['url' => '/fundament/fundament-monolitnaya-plita', 'label' => 'Монолитная плита'],
             ]])
             <h1 class="sr-only">Расчет фундамента</h1>
+            
     <div class="col-sm-12">
         <h2>{{ $page_title }}</h2>
+        <!-- info box in yellow -->
+        <div class="alert alert-warning" role="alert">
+            <p>На этой странице вы можете рассчитать стоимость фундамента для вашего дома и получить подробную смету с материалами и работами.</p>
+        </div>
         <form id="stripFoundationForm" class="mt-4">
             @php
                 // Sort the formFields array by the 'order' attribute

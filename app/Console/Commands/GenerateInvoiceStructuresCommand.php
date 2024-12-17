@@ -252,8 +252,24 @@ class GenerateInvoiceStructuresCommand extends Command
             // Determine the range to search
             $startRow = min($lastSectionEndRow + 1, $worksheet->getHighestRow());
             $endRow = max(180, $startRow);
-
+            $C5filled = $worksheet->getCell('C5')->getValue();
+            $C5Valid = strlen($C5filled) > 2 && strlen($C5filled) < 5;
+            if ($C5Valid) {
+                // first character of C5
+                $firstLetter = substr($C5filled, 0, 1);
+                // remove first letter from C5
+                $rowIndex = substr($C5filled, 1);
+                $sheetStructure['boxStart'] = [
+                    "rowIndex" => $rowIndex,
+                    "col" => $firstLetter,
+                    "firstCell" => $firstLetter . $rowIndex
+                ];
+            }
             for ($rowIndex = $startRow; $rowIndex <= $endRow; $rowIndex++) {
+                
+                if ($C5Valid) continue;
+                Log::info("C5 is not valid for worksheet " . $worksheet->getTitle());
+
                 $row = $worksheet->rangeToArray('A' . $rowIndex . ':' . $worksheet->getHighestColumn() . $rowIndex, null, true, false)[0];
                 
                 foreach ($row as $colIndex => $value) {

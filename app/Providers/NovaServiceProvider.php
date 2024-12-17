@@ -36,6 +36,9 @@ use App\Nova\DesignPurchaseStatistic;
 use App\Nova\InvoiceTypeStatistic;
 use App\Nova\BlogPost;
 use App\Nova\PricePlan;
+use App\Nova\PortalLog;
+
+
 class NovaServiceProvider extends NovaApplicationServiceProvider
 {
     /**
@@ -46,6 +49,10 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     public function boot()
     {
         parent::boot();
+
+        Nova::auth(function ($request) {
+            return Gate::check('viewNova', [$request->user()]);
+        });
 
         Nova::mainMenu(function (Request $request) {
             return [
@@ -59,6 +66,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                     MenuItem::resource(Supplier::class),
                     MenuItem::resource(User::class),
                     MenuItem::resource(BlogPost::class),
+                    
                     //MenuItem::resource(AssociatedCost::class),
                 ])->icon('library')->collapsable(),
 
@@ -66,6 +74,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 //MenuSection::make(Translator::translate('settings_menu'), [
                     MenuItem::resource(FormField::class),
                     MenuItem::resource(PricePlan::class),
+                    MenuItem::resource(PortalLog::class),
                     /*MenuItem::resource(DesignNonAdmin::class),
                     MenuItem::resource(DesignSeo::class),
                     MenuItem::resource(SettingsOriginal::class),*/
@@ -131,9 +140,7 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
     protected function gate()
     {
         Gate::define('viewNova', function ($user) {
-            return in_array($user->email, [
-                //
-            ]);
+            return $user->superadmin;
         });
     }
 

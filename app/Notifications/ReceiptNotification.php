@@ -8,6 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class ReceiptNotification extends Notification
 {
     use Queueable;
@@ -26,19 +27,11 @@ class ReceiptNotification extends Notification
 
     public function via($notifiable)
     {
-        return ['mail', 'database'];
+        return ['mail'];
     }
 
     public function toMail($notifiable)
     {
-        $view = View::make('emails.receipt', [
-            'project' => $this->project,
-            'design' => $this->design,
-            'user_email' => $this->user_email,
-        ]);
-
-        $html = $view->render();
-
         // check if such notification was already sent earlier
         if (!$this->override) {
             /* NOT WORKING

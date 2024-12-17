@@ -9,6 +9,10 @@ class FeedbackController extends Controller
 {
     public function send(Request $request)
     {
+        //check captcha
+        if ($request->captcha !== '3') {
+            return response()->json(['error' => 'Unauthorized'], 418);
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255',

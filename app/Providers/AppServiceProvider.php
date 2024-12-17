@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Blade;
 use App\Services\CaptionService;
+use App\Models\Design;
+use App\Observers\DesignObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -26,5 +28,6 @@ class AppServiceProvider extends ServiceProvider
         Blade::directive('caption', function ($expression) {
             return "<?php echo app('" . CaptionService::class . "')->get($expression); ?>";
         });
+        Design::observe(DesignObserver::class);
     }
 }

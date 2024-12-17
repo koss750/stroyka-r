@@ -23,6 +23,7 @@ class InvoiceType extends Resource
             ID::make()->sortable(),
             Text::make('Title'),
             Text::make('Ref'),
+            Text::make('Sheetname'),
             // Add other fields as needed
         ];
     }

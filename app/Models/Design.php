@@ -121,7 +121,10 @@ class Design extends Model implements HasMedia
      */
     public function projectPrices()
     {
-        return $this->hasMany(ProjectPrice::class)->orderBy('created_at', 'desc')->groupBy('invoice_type_id');
+        return $this->hasMany(ProjectPrice::class)
+            ->select(['id', 'design_id', 'invoice_type_id', 'price', 'created_at'])
+            ->latest()
+            ->groupBy(['invoice_type_id', 'id', 'design_id', 'price', 'created_at']);
     }
 
     /**
@@ -245,21 +248,21 @@ public function registerMediaCollections(): void
     public function watermarkImageUrls()
     {
         return $this->getMedia('images')->map(function ($media) {
-                    return $media->getUrl('watermarked');
+            return url($media->getUrl('watermarked')); 
                 })->all();
     }
 
     public function thumbImageUrls()
     {
         return $this->getMedia('images')->map(function ($media) {
-                    return $media->getUrl('thumbie');
+                    return url($media->getUrl('thumbie')); 
                 })->all();
     }
 
     public function mildMailImage()
 {
     $firstMedia = $this->getMedia('images')->first();
-    return $firstMedia ? $firstMedia->getUrl('milder') : null;
+    return $firstMedia ? url($firstMedia->getUrl('milder')) : null;
 }
 
 public function setImages()
@@ -638,6 +641,11 @@ public function foundationLentaExcelTest($tape)
     public function seo()
     {
         return $this->hasOne(DesignSeo::class);
+    }
+
+    public function logs()
+    {
+        return $this->morphMany(PortalLog::class, 'loggable');
     }
 
     protected static function boot()

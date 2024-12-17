@@ -220,7 +220,6 @@ class OrderController extends Controller
         $project->payment_status = 'pending';
         $project->price_type = 'foundation_example_labour';
         $project->save();
-        //$user->notify(new ReceiptNotification($project, $design, $user->email));
         return response()->json([
             'success' => true,
             'paymentUrl' => $paymentUrl
@@ -274,6 +273,7 @@ class OrderController extends Controller
                     //dd($request->all());
                     $result = $tinkoff->initPayment([
                         'amount' => $request->input('payment_amount')*100,
+                        //'amount' => 100,
                         'email' => $user->email,
                         'phone' => $user->phone,
                         'orderId' => $project->human_ref,
@@ -581,8 +581,15 @@ class OrderController extends Controller
         $project = Project::where('human_ref', base64_decode($order_id))->firstOrFail();
         $project->payment_status = $payment_status;
         if ($payment_status == 'success') {
-            //$user = User::find($project->user_id);
-            //$user->notify(new ReceiptNotification($project, $design, $user->email));
+            try {
+                $user = User::find($project->user_id);
+                $item = $project->order_type == 'foundation' ? Foundation::find($project->foundation_id) : ($project->order_type == 'registration' ? null : Design::find($project->design_id));
+                if (!$project->is_example && $project->payment_amount > 0) {
+                    $user->notify(new ReceiptNotification($project, $item, $user->email));
+                }
+            } catch (\Exception $e) {
+                Log::error('Receipt notification error: ' . $e->getMessage());
+            }
         }
         $project->is_example ? $project->payment_status = 'error' : $project->payment_status = $payment_status;
         $project->save();

@@ -21,7 +21,7 @@ use Symfony\Component\Console\Helper\ProgressBar;
 use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Carbon\Carbon;
-
+use App\Models\PortalLog;
 
 
 class IndexCommand extends Command
@@ -40,6 +40,7 @@ class IndexCommand extends Command
     protected $combinedSheetRows = [];
     protected $additionalDeletedRows = 0;
     protected $invoices;
+    protected $runId;
     protected $totalBoxes = [0, 0, 0, 0, 0, 0, 0];
 
     protected $cellMappings = [
@@ -220,6 +221,7 @@ class IndexCommand extends Command
         $range = $this->option('range');
         $singleId = $this->option('id');
         $defaultRefOnly = $this->option('defaultOnly');
+        $this->runId = hash('sha256', now()->toDateTimeString() . random_bytes(16));
 
         
         if ($range) {
@@ -227,21 +229,27 @@ class IndexCommand extends Command
             $this->designs = Design::whereBetween('id', [$start, $end])->where('active', '1')->get();
         } elseif ($singleId) {
             $this->designs = Design::where('id', $singleId)->where('active', '1')->whereNotIn('id', $this->hardcodedIds['plitaCases'])->get();
+            if ($this->designs->isEmpty() && $singleId == 1) {
+                $this->designs = [Design::where('id', 1)->first()];
+            }
         } else {
             $this->designs = Design::where('active', '1')->whereNotIn('id', $this->hardcodedIds['plitaCases'])->get();
         }
-        
+        // all relevant invoices
         $this->invoices = InvoiceType::where('sheetname', '!=', null)->where('site_level4_label', "!=", "FALSE")->get();
+        // invoice type id 307 only
+        //$this->invoices = InvoiceType::where('id', 307)->get();
         $sheetnames = $this->invoices->pluck('sheetname')->unique()->toArray();
         
         
-        //$this->spreadsheet = IOFactory::createReader('Xlsx')->load(storage_path('templates/test.xlsx'));
+        $this->spreadsheet = IOFactory::createReader('Xlsx')->load(storage_path('templates/test.xlsx'));
         
         $this->info("Adding empty cases");
-        $bar = $this->output->createProgressBar(count($this->designs));
-        //change it later to handle from file
-        
-        $bar->start();
+        if (sizeof($this->designs) > 1) {
+            $bar = $this->output->createProgressBar(count($this->designs));
+            //change it later to handle from file
+            $bar->start();
+        }
         foreach ($this->designs as $design) {
             $emptyCases = [312, 173];
             foreach ($emptyCases as $emptyCase) {   
@@ -251,9 +259,13 @@ class IndexCommand extends Command
                 $NewprojectPrice->price = json_encode(["material" => 0, "labour" => 0, "total" => 0]);
                 $NewprojectPrice->save();
             }
-            $bar->advance();
+            if (sizeof($this->designs) > 1) {
+                $bar->advance();
+            }
         }
-        $bar->finish();
+        if (sizeof($this->designs) > 1) {
+            $bar->finish();
+        }
         $this->info("Moving on...");
         
 
@@ -366,6 +378,19 @@ class IndexCommand extends Command
                     }
                 }
             }
+
+            PortalLog::create([
+                'loggable_type' => get_class($design),
+                'loggable_id' => $design->id,
+                'action' => 'Цены готовы к индексации',
+                'action_type' => 'app:full',
+                'user_id' => auth()->id() ?? 7,
+                'details' => [
+                    'design_id' => $design->id,
+                    'started_at' => now()->toDateTimeString(),
+                    'run_id' => $this->runId
+                ]
+            ]);
             
             $progressBar->advance();
         }
@@ -380,19 +405,7 @@ class IndexCommand extends Command
         $this->info("\nParameters changed: " . $paramsChangedCount);
 
         // Add this block to save the spreadsheet copy for a single ID
-        if ($singleId) {
-            $materialPrice = 0;
-            foreach ($results[$singleId] as $invoiceId => $result) {
-                if ($invoiceId != 0) {
-                    $decodedResult = json_decode($result['price'], true);
-                    if (isset($decodedResult['material'])) {
-                        $materialPrice += $decodedResult['material'];
-                    }
-                }
-            }
-            $this->info("\nMaterial price: " . number_format($materialPrice, 2));
-            $this->saveSpreadsheetCopy($singleId);
-        }
+       
 
         //$this->fixProjectPrices();
     }
@@ -411,8 +424,15 @@ class IndexCommand extends Command
         $progressBar = $this->output->createProgressBar(count($results));
         $progressBar->start();
         foreach ($results as $designId => $invoices) {
+            if (sizeof($this->designs) > 1) {
+                $currentDesign = $this->designs->where('id', $designId)->first();
+            }
+            else {
+                $currentDesign = $this->designs[0];
+            }
             foreach ($invoices as $invoiceId => $result) {
-                if ($invoiceId == 0) {
+                $currentInvoice = $this->invoices->where('id', $invoiceId)->first();
+                if ($invoiceId < 2) {
                     continue;
                 }
                 $existingPP = ProjectPrice::where('design_id', $designId)->where('invoice_type_id', $invoiceId)->first();
@@ -422,10 +442,39 @@ class IndexCommand extends Command
                     if ($existingPP->price != $price) {
                         $updatedCount++;
                         $existingPP->price = $price;
+                        PortalLog::create([
+                            'loggable_type' => get_class($existingPP),
+                            'loggable_id' => $existingPP->id,
+                            'action' => 'Обновление основных цен после индексации. Дизайн ' . $currentDesign->title . ' Смета ' . $currentInvoice->sheetname,
+                            'action_type' => 'app:full',
+                            'user_id' => auth()->id() ?? 7,
+                            'details' => [
+                                'price' => $price,
+                                'parametersHash' => hash('sha256', $parameters),
+                                'design_id' => $currentDesign->id,
+                                'invoice_id' => $currentInvoice->id,
+                                'timestamp' => now()->toDateTimeString(),
+                                'run_id' => $this->runId
+                            ]
+                        ]);
                     }
                     if (base64_encode($existingPP->parameters) != base64_encode($parameters)) {
                         $paramsChangedCount++;
                         $existingPP->parameters = $parameters;
+                        PortalLog::create([
+                            'loggable_type' => get_class($existingPP),
+                            'loggable_id' => $existingPP->id,
+                            'action' => 'Обновление параметров после индексации. Дизайн ' . $currentDesign->title . ' Смета ' . $currentInvoice->sheetname,
+                            'action_type' => 'app:full',
+                            'user_id' => auth()->id() ?? 7,
+                            'details' => [
+                                'parametersHash' => hash('sha256', $parameters),
+                                'design_id' => $currentDesign->id,
+                                'invoice_id' => $currentInvoice->id,
+                                'timestamp' => now()->toDateTimeString(),
+                                'run_id' => $this->runId
+                            ]
+                        ]);
                     }
                     $existingPP->save();
                     
@@ -437,6 +486,21 @@ class IndexCommand extends Command
                     $projectPrice->price = $price;
                     $projectPrice->parameters = $parameters;
                     $projectPrice->save();
+                    PortalLog::create([
+                        'loggable_type' => get_class($projectPrice),
+                        'loggable_id' => $projectPrice->id,
+                        'action' => 'Первое создание цен и параметров после индексации. Дизайн ' . $currentDesign->title . ' Смета ' . $currentInvoice->sheetname,
+                        'action_type' => 'app:full',
+                        'user_id' => auth()->id() ?? 7,
+                        'details' => [
+                            'price' => $price,
+                            'parametersHash' => hash('sha256', $parameters),
+                            'design_id' => $currentDesign->id,
+                            'invoice_id' => $currentInvoice->id,
+                            'timestamp' => now()->toDateTimeString(),
+                            'run_id' => $this->runId
+                        ]
+                    ]);
                     $createdCount++;
                 }
             }
@@ -451,6 +515,19 @@ class IndexCommand extends Command
                 $design->details = json_encode($details);
                 $design->save();
             }
+            PortalLog::create([
+                'loggable_type' => get_class($currentDesign),
+                'loggable_id' => $currentDesign->id,
+                'action' => 'Цены обновлены в базе данных',
+                'action_type' => 'app:full',
+                'user_id' => auth()->id() ?? 7,
+                'details' => [
+                    'prices' => $results[$currentDesign->id],
+                    'run_id' => $this->runId,
+                    'invoice_id' => $currentInvoice->id,
+                    'timestamp' => now()->toDateTimeString()
+                ]
+            ]);
             $progressBar->advance();
         }
         $progressBar->finish();
@@ -482,8 +559,11 @@ class IndexCommand extends Command
 
         $boxStart = $sheetStructure['boxStart'];
         $materialCell = $this->getMaterialCell($boxStart);
+        $materialCell = trim($materialCell);
         $labourCell = $this->getLabourCell($boxStart);
+        $labourCell = trim($labourCell);
         $totalCellValue = $this->getTotalValue($sheet, $boxStart);
+        $totalCellValue = trim($totalCellValue);
 
         $testVar = $sheet->getCell($materialCell)->getCalculatedValue();
         if (is_numeric($testVar)) {
@@ -494,6 +574,18 @@ class IndexCommand extends Command
             $materialCellValue = 999;
             $labourCellValue = 999;
             $total = 999;
+            PortalLog::create([
+                'loggable_type' => get_class($design),
+                'loggable_id' => $design->id,
+                'action' => 'Неожиданные данные в смете при индексации. Дизайн ' . $design->title . ' Смета ' . $sheetname,
+                'action_type' => 'app:full',
+                'user_id' => auth()->id() ?? 7,
+                'details' => [
+                    'sheetname' => $sheetname,
+                    'timestamp' => now()->toDateTimeString(),
+                    'run_id' => $this->runId
+                ]
+            ]);
         }
         return [
             'material' => $materialCellValue,
@@ -560,7 +652,10 @@ class IndexCommand extends Command
 
     // Add boxStart values
     if (isset($sheetStructure['boxStart'])) {
-        $sheetStructure['boxStart']['value'] = $this->getCellValue($sheet, $sheetStructure['boxStart']['firstCell']);
+        $boxStart = $sheetStructure['boxStart'];
+        Log::info("Box start: " . $boxStart['firstCell']);
+        $boxStart['value'] = $this->getCellValue($sheet, $boxStart['firstCell']);
+        $sheetStructure['boxStart'] = $boxStart;
     }
 
     // Update the sheet_structure in the params array
@@ -577,6 +672,7 @@ class IndexCommand extends Command
 
     protected function getCellValue($sheet, $cellReference)
     {
+        $cellReference = trim($cellReference);
         $cellValue = $sheet->getCell($cellReference)->getCalculatedValue();
         return is_numeric($cellValue) ? floatval($cellValue) : $cellValue;
     }
@@ -757,7 +853,22 @@ class IndexCommand extends Command
                 return $this->handleSVRost($design);
                 break;
             case "Смета плита":
-                return $this->handlePlita($design);
+                try {
+                    return $this->handlePlita($design);
+                } catch (\Exception $e) {
+                    PortalLog::create([
+                        'loggable_type' => get_class($design),
+                        'loggable_id' => $design->id,
+                        'action' => 'Ошибка при индексации цен на плиту. Дизайн ' . $design->title . ' Смета плита',
+                        'action_type' => 'app:full',
+                        'user_id' => auth()->id() ?? 7,
+                        'details' => [
+                            'design_id' => $design->id,
+                            'started_at' => now()->toDateTimeString(),
+                            'run_id' => $this->runId
+                        ]
+                    ]);
+                }
                 break;
             case "Смета лента 600х300":
                 return $this->handleLenta($design);

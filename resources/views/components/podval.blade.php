@@ -22,6 +22,7 @@
             <input type="text" name="name" placeholder="Ваше имя" required>
             <input type="text" name="phone" placeholder="Ваш телефон">
             <input type="email" name="email" placeholder="Ваш email" required>
+            <input type="text" id="captcha" name="captcha" placeholder="Задача: дъва плюс адин = ?">
             <textarea name="message" placeholder="Ваше сообщение" maxlength="1000" onkeyup="updateCounter(this)"></textarea>
             <div class="char-counter"><span id="charCount">1000</span> символов осталось. Файлы и длинные сообщения присылайте на <a href="mailto:info@стройка.com">info@стройка.com</a></div>
           

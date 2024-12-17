@@ -43,6 +43,10 @@ use App\Nova\Filters\ActiveFilterAlt;
 use Maatwebsite\LaravelNovaExcel\Actions\DownloadExcel;
 use App\Nova\Filters\AlmostReady;
 use Laravel\Nova\Fields\HasOne;
+use App\Nova\Actions\IndexDesign;
+use App\Nova\PortalLog;
+use App\Models\ProjectPrice;
+use App\Nova\ProjectPrice as ProjectPriceNova;
 
 
 class Design extends Resource
@@ -100,6 +104,7 @@ class Design extends Resource
         $controller = new DesignController;
         $headers = $controller->getHeaders();
         return [
+            new IndexDesign,
             new GenerateExcel,
             (new DownloadExcel)->withHeadings()
         ];
@@ -175,7 +180,8 @@ class Design extends Resource
                     "df_room_33" => "Кухня-столовая",
                     "df_room_34" => "Столовая",
                     "df_room_35" => "Веранда",
-                    "df_room_36" => "Купель"
+                    "df_room_36" => "Купель",
+                    "df_room_37" => "Раздевалка"
                     ];
         case "materialType":
             return [
@@ -284,6 +290,11 @@ class Design extends Resource
                 Number::make(Translator::translate('size'), 'size')->sortable()->displayUsing(function ($value) {
                     return (float)($value);
                 })->exceptOnForms(),
+
+                //link to the design
+                Text::make(Translator::translate('slug'), 'slug')->onlyOnDetail()->displayUsing(function ($value) {
+                    return env('APP_URL') . '/project/' . $value;
+                }),
                 
                 //length
                 Text::make(Translator::translate('length'), 'length')->onlyOnForms()->hideFromIndex()->showOnExport(),
@@ -371,7 +382,8 @@ class Design extends Resource
                  "Кухня-столовая"     => "Кухня-столовая",
                  "Столовая"     => "Столовая",
                  "Веранда" => "Веранда",
-                 "Купель" => "Купель"
+                 "Купель" => "Купель",
+                 "Раздевалка" => "Раздевалка"
                     ]),
                     Text::make("Ширина", "width"),
                     Text::make("Длина", "length"),
@@ -589,7 +601,14 @@ class Design extends Resource
             Panel::make('SEO', [
                 HasOne::make('SEO', 'seo', DesignSeo::class),
             ]),
+
+            Panel::make('Логи', [
+                HasMany::make('Действия', 'logs', PortalLog::class),
+            ]),
                
+            Panel::make('Цены', [
+                HasMany::make('Цены', 'projectPrices', ProjectPriceNova::class),  
+            ]),
             
                 
                 

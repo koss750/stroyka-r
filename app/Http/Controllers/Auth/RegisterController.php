@@ -126,6 +126,7 @@ class RegisterController extends Controller
                 if ($regionIsoCode) {
                     $mainRegion = DB::table('regions')
                         ->where('iso_code', $regionIsoCode)
+                        ->orWhere('id', $regionIsoCode)
                         ->first();
                 }
             }

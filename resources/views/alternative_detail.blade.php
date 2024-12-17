@@ -81,7 +81,7 @@
                </div>
                <div class="col-lg-6 col-md-12">
                <div class="price-tag text-black">
-                    <h2>Стоимость: <span id="totalPrice">{{ $design->etiketka }}</span>
+                    <h2>Стоимость: <span id="totalPrice"> <i class="fas fa-spinner fa-spin"></i> </span>
                         <i class="fas fa-info-circle text-danger" data-toggle="tooltip" data-placement="top" title="{{$toolTipLabel}}" style="
     font-size: 48%;
     vertical-align: top;

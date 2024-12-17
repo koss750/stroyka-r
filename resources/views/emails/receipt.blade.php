@@ -17,7 +17,7 @@
                     <strong>КАССОВЫЙ ЧЕК №:</strong> {{ $project['payment_reference'] }}
                 </div>
                 <div class="col-6 text-right">
-                    <strong>Дата:</strong> {{ date('d.m.y H:i') }}
+                    <strong>Дата:</strong> {{ date('d.m.y H:i', strtotime($project['payment_date'] . ' + 3 hours')) }}
                 </div>
             </div>
 

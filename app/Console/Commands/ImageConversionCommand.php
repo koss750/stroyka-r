@@ -8,14 +8,17 @@ use App\Models\Design;
 use Spatie\MediaLibrary\Conversions\Jobs\PerformConversionsJob;
 use Spatie\MediaLibrary\Conversions\ConversionCollection;
 use Carbon\Carbon;
-
+use App\Models\PortalLog;
 class ImageConversionCommand extends Command
 {
-    protected $signature = 'misc:convert-images {design_id? : The ID of the specific design to process} {--recent : Process designs from the last 7 days}';
+    protected $signature = 'misc:convert-images 
+                            {design_id? : The ID of the specific design to process}
+                            {--recent : Process designs from the last 15 days}
+                            {--ids= : Comma-separated list of design IDs (e.g., 804,791,434)}';
 
     protected $description = 'Generate conversions for all missing media attached to Design models';
 
-    public $timeout = 130; // 2 minutes
+    public $timeout = 13000; // 2 minutes
 
     public function retryUntil()
     {
@@ -26,13 +29,17 @@ class ImageConversionCommand extends Command
     {
         $designId = $this->argument('design_id');
         $recentOnly = $this->option('recent');
+        $specificIds = $this->option('ids');
 
         $query = Design::where('active', 1);
 
         if ($designId) {
             $query = Design::where('id', $designId);
         } elseif ($recentOnly) {
-            $query = Design::where('updated_at', '>=', Carbon::now()->subDays(1));
+            $query = Design::where('id', '>=', 862)->where('active', 1);
+        } elseif ($specificIds) {
+            $ids = array_map('trim', explode(',', $specificIds));
+            $query = Design::whereIn('id', $ids)->where('active', 1);
         }
 
         $designs = $query->get();
@@ -77,7 +84,13 @@ class ImageConversionCommand extends Command
                 
                 $this->info("Conversions queued for media id: {$image->id}");
             }
-            
+            PortalLog::create([
+                'loggable_type' => get_class($design),
+                'loggable_id' => $design->id,
+                'action' => 'Конвертация изображений',
+                'action_type' => 'app:convert-images',
+                'user_id' => auth()->id() ?? 7,
+            ]);
             $bar->advance();
         }
 
